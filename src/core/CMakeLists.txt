@@ -12,10 +12,11 @@ file(GLOB CPPS "src/*.cpp")
 add_library(${PROJECT_NAME} ${CPPS})
 
 ################# TESTS #################
-option (BUILD_TESTS OFF)
-
 if (BUILD_TESTS)
-    add_executable(${PROJECT_NAME}_tests ../../tests/core/*.cpp)
+    file(GLOB TESTS "../../tests/core/*.cpp" 
+                    "../../tests/main.cpp")
+
+    add_executable(${PROJECT_NAME}_tests ${TESTS})
 
     target_link_libraries(${PROJECT_NAME}_tests
         ${PROJECT_NAME}
