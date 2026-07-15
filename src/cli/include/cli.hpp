@@ -1,9 +1,10 @@
 #ifndef CLI_HEADER
 #define CLI_HEADER
 
-#include "core/include/core.hpp"
+#include "core/include/Instructions.hpp"
 
-class CLI {
+class CLI 
+{
 
     private:
 
@@ -16,7 +17,7 @@ class CLI {
     public:
 
         CLI();
-        bool inputInstructions(int argc, char* argv[]);
+        bool inputInstructions(int argc, char* argv[]) noexcept;
         const InputCommand releaseInputInstructions() const;
 
 };

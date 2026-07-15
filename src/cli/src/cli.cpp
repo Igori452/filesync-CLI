@@ -2,7 +2,7 @@
 
 CLI::CLI() {}
 
-bool CLI::inputInstructions(int argc, char* argv[]) 
+bool CLI::inputInstructions(int argc, char* argv[]) noexcept
 {
 
     if (argc <= 1) 

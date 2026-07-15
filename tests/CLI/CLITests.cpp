@@ -20,7 +20,7 @@ TEST(CLI, ParseCompareCommand)
 
     EXPECT_TRUE(cli.inputInstructions(4, argv));
 
-    const auto& input = cli.getInputInstructions();
+    auto input = cli.releaseInputInstructions();
 
     EXPECT_EQ(input.command, Commands::COMPARE);
     EXPECT_EQ(input.arguments.size(), 2);
@@ -94,7 +94,7 @@ TEST(CLI, ParseOption)
 
     EXPECT_TRUE(cli.inputInstructions(5, argv));
 
-    const auto& input = cli.getInputInstructions();
+    auto input = cli.releaseInputInstructions();
 
     ASSERT_EQ(input.options.size(), 1);
     EXPECT_EQ(input.options[0], Options::RECURSIVE);
@@ -143,7 +143,7 @@ TEST(CLI, MultipleOptions)
 
     EXPECT_TRUE(cli.inputInstructions(6, argv));
 
-    const auto& input = cli.getInputInstructions();
+    auto input = cli.releaseInputInstructions();
 
     ASSERT_EQ(input.options.size(), 2);
 

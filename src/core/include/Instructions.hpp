@@ -1,11 +1,9 @@
-#ifndef CORE_HEADER
-#define CORE_HEADER
+#ifndef INSTRUCTIONS_HEADER
+#define INSTRUCTIONS_HEADER
 
 #include <string>
-#include <vector>
 #include <map>
-#include <algorithm>
-
+#include <vector>
 
 enum class Commands 
 {
@@ -155,7 +153,6 @@ const std::map<Commands, CommandInfo> commandRegistry
         "Display the current version of the program"}},
 };
 
-
 /* COMMAND MODEL DATA (USE CLI AND APPLICATION) */
 struct InputCommand
 {
@@ -165,6 +162,5 @@ struct InputCommand
     std::vector<Options> options;
 
 };
-
 
 #endif
