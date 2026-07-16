@@ -1,5 +1,4 @@
-#ifndef INSTRUCTIONS_HEADER
-#define INSTRUCTIONS_HEADER
+#pragma once
 
 #include <string>
 #include <map>
@@ -162,5 +161,3 @@ struct InputCommand
     std::vector<Options> options;
 
 };
-
-#endif

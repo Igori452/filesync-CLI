@@ -1,5 +1,4 @@
-#ifndef INDEX_HEADER
-#define INDEX_HEADER
+#pragma once
 
 class Index 
 {
@@ -11,6 +10,3 @@ class Index
     public:
 
 };
-
-
-#endif

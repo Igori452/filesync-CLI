@@ -5,7 +5,6 @@ FileInfo::FileInfo(std::filesystem::path fp)
 
 bool FileInfo::update() noexcept
 {
-
     std::error_code ec;
 
     if (!std::filesystem::exists(path_))

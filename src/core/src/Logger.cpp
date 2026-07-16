@@ -10,61 +10,79 @@ Logger& Logger::instance()
     return logger;
 }
 
-void Logger::log(MessageStatus st, std::string_view msg) 
+void Logger::onMessage() 
 {
-    LoggerMessage loggerMeassage;
+    if (observer == nullptr)
+        return;
+    
+    if (firstUnprocessed != Log.size()) 
+    {
+        for (; firstUnprocessed < Log.size(); ++firstUnprocessed) 
+        {
+            observer->display(/*DATA*/);
+        }
+    }
+}
+
+void Logger::subscribe(const UserOutput* ob) 
+{
+    observer = ob;
+
+    if (firstUnprocessed != Log.size() - 1) 
+    {
+        onMessage();
+    }
+}
+
+void Logger::unsubscribe() 
+{
+    observer = nullptr;
+}
+
+bool Logger::hasObserver() const 
+{
+    return (observer == nullptr ? false : true);
+}
+
+void Logger::log(MessageStatus st, MessageView v, std::string_view msg) 
+{
+    LoggerMessage loggerMeassage {};
 
     loggerMeassage.status = st;
     loggerMeassage.message = msg;
     loggerMeassage.messageTime = std::chrono::system_clock::now();
 
-    Log.emplace_back(loggerMeassage);
+    loggerMeassage.view = v;
+    loggerMeassage.userOutputProcessed = false;
+
+    Log.emplace_back(std::move(loggerMeassage));
 }
 
-void Logger::flush(std::ostream& out, MessageFormat format) const 
+std::string LoggerFormatter::formatText(const LoggerMessage& lg) 
 {
-    std::string text;
-    switch (format)
+    std::string line;
+    switch (lg.status)
     {
-        case MessageFormat::TEXT:
-            text = formatToText();
+        case MessageStatus::INFO:
+            line = "[INFO] - ";
+            break;
+        case MessageStatus::WARNING:
+            line = "[WARNING] - ";   
+            break;
+        case MessageStatus::ERROR:
+            line = "[ERROR] - ";
             break;
     }
 
-    out << text;
-}
+    std::time_t tt = std::chrono::system_clock::to_time_t(lg.messageTime);
+    std::tm tm = *std::localtime(&tt);
 
-std::string Logger::formatToText() const 
-{
-    std::string msg;
-    for (const LoggerMessage& item : Log) 
-    {
-        std::string line;
-        switch (item.status)
-        {
-            case MessageStatus::INFO:
-                line = "[INFO] - ";
-                break;
-            case MessageStatus::WARNING:
-                line = "[WARNING] - ";   
-                break;
-            case MessageStatus::ERROR:
-                line = "[ERROR] - ";
-                break;
-        }
+    std::ostringstream oss;
+    oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
 
-        std::time_t tt = std::chrono::system_clock::to_time_t(item.messageTime);
-        std::tm tm = *std::localtime(&tt);
+    line += oss.str() + " : ";
 
-        std::ostringstream oss;
-        oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
+    line += lg.message + "\n";
 
-        line += oss.str() + " : ";
-
-        line += item.message + "\n";
-
-        msg += line;
-    }
-
-    return msg;
+    return line;
 }

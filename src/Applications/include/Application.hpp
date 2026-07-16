@@ -1,23 +1,25 @@
-#ifndef APPLICATION_HEADER
-#define APPLICATION_HEADER
+#pragma once
+
+#include <memory>
 
 #include "core/include/Instructions.hpp"
+#include "core/include/UserOutput.hpp"
 
 class Application 
 {
 
     private:
-
         InputCommand inputCommand;
+        std::unique_ptr<UserOutput> output;
 
-        void compare();
-        void sync();
-        void verify();
-        void status();
-        void help();
-        void version();
+        bool compare();
+        bool sync();
+        bool verify();
+        bool status();
+        bool help();
+        bool version();
 
-        const std::map<Commands, void (Application::*)()> applicationActions 
+        const std::map<Commands, bool (Application::*)()> applicationActions 
         {
             {Commands::COMPARE, compare},
             {Commands::SYNC, sync},
@@ -28,13 +30,9 @@ class Application
         };
 
     public:
-
         Application() = delete;
-        Application(InputCommand command);
+        Application(InputCommand command, UserInterface interface = UserInterface::CONSOLE);
 
         // выбор нужной команды
-        void executeInputCommand();
-
+        bool executeInputCommand();
 };
-
-#endif

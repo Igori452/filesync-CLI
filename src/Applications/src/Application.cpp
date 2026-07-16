@@ -1,25 +1,33 @@
 #include "../include/Application.hpp"
+#include "../../core/include/ModuleSettings.hpp"
 
-Application::Application(InputCommand command) 
-    : inputCommand(std::move(command)) {}
+Application::Application(InputCommand command, UserInterface interface) 
+    : inputCommand(std::move(command)) 
+    {
+       switch (interface)
+       {
+            case UserInterface::CONSOLE:
+                OutputUserSettings settings {};
+                settings.setSettings(command);
 
-void Application::executeInputCommand() 
+                output = std::make_unique<ConsoleOutput>(std::move(settings));
+                break;
+       }
+    }
+
+bool Application::executeInputCommand() 
 {
-
     const auto action = applicationActions.at(inputCommand.command);
-    (this->*action)();
-
+    return (this->*action)();
 }
 
-void Application::compare() 
+bool Application::compare() 
 {
-
     
-
 }
 
-//void Application::sync();
-//void Application::verify();
-//void Application::status();
-//void Application::help();
-//void Application::version();
+//bool Application::sync();
+//bool Application::verify();
+//bool Application::status();
+//bool Application::help();
+//bool Application::version();

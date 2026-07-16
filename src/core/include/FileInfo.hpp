@@ -1,5 +1,4 @@
-#ifndef FILEINFO_HEADER
-#define FILEINFO_HEADER
+#pragma once
 
 #include <filesystem>
 #include <chrono>
@@ -37,7 +36,3 @@ class FileInfo
 
         const std::filesystem::perms& permission() const;
 };
-
-
-
-#endif
