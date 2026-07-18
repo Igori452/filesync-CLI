@@ -27,7 +27,10 @@ class UserOutput
  * The class is designed to allow for easy testing of console output.
  *
  * Console output logger.
- * out - Stream reference. Must outlive this object.
+ * 
+ * out — a reference to the stream. 
+ * The lifetime of the stream must exceed the lifetime of this object; 
+ * otherwise, undefined behavior occurs.
  */
 class ConsoleOutput : public UserOutput 
 {
