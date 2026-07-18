@@ -1,6 +1,11 @@
 #pragma once
 
+#include <iostream>
+
 #include "ModuleSettings.hpp"
+#include "Logger.hpp"
+
+class LoggerMessage;
 
 enum class UserInterface {CONSOLE /*,UI, WEB...*/};
 
@@ -13,17 +18,22 @@ class UserOutput
         UserOutput() = delete;
         explicit UserOutput(OutputUserSettings st);
 
-        virtual void display() const = 0;
+        virtual void display(const LoggerMessage& lgmsg) const = 0;
         virtual ~UserOutput() = default;
 
 };
 
+/*
+ * The class is designed to allow for easy testing of console output.
+ */
 class ConsoleOutput : public UserOutput 
 {
+    private:
+        std::ostream& console;
+
     public:
+        explicit ConsoleOutput(OutputUserSettings st, std::ostream& out = std::cout);
 
-        explicit ConsoleOutput(OutputUserSettings st);
-
-        void display() const override;
+        void display(const LoggerMessage& lgmsg) const override;
 
 };

@@ -4,6 +4,61 @@
 #include <sstream>
 #include <ctime>
 
+LoggerMessage::LoggerMessage(MessageStatus st, MessageView msgv, std::string msg) 
+: status(st), view(msgv), message(std::move(msg)),
+  messageTime(std::chrono::system_clock::now()) {}
+
+MessageStatus LoggerMessage::getStatus() const 
+{
+    return status;
+}
+
+MessageView LoggerMessage::getView() const 
+{
+    return view;
+}
+
+std::chrono::system_clock::time_point LoggerMessage::getMessageTime() const 
+{
+    return messageTime;
+}
+
+std::string LoggerMessage::getMessage() const 
+{
+    return message;
+}
+
+std::string LoggerMessage::formatText() const
+{
+    std::string line;
+    switch (status)
+    {
+        case MessageStatus::INFO:
+            line = "[INFO] - ";
+            break;
+        case MessageStatus::WARNING:
+            line = "[WARNING] - ";   
+            break;
+        case MessageStatus::ERROR:
+            line = "[ERROR] - ";
+            break;
+    }
+
+    std::time_t tt = std::chrono::system_clock::to_time_t(messageTime);
+    std::tm tm = *std::localtime(&tt);
+
+    std::ostringstream oss;
+    oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
+
+    line += oss.str() + " : ";
+
+    line += message + "\n";
+
+    return line;
+}
+
+Logger::Logger() : observer(nullptr), firstUnprocessed(0) {}
+
 Logger& Logger::instance() 
 {
     static Logger logger;
@@ -19,24 +74,29 @@ void Logger::onMessage()
     {
         for (; firstUnprocessed < Log.size(); ++firstUnprocessed) 
         {
-            observer->display(/*DATA*/);
+            observer->display(Log[firstUnprocessed]);
         }
     }
 }
 
-void Logger::subscribe(const UserOutput* ob) 
+LoggerSubscription Logger::subscribe(const UserOutput* ob) 
 {
     observer = ob;
 
-    if (firstUnprocessed != Log.size() - 1) 
+    if (firstUnprocessed != Log.size()) 
     {
         onMessage();
     }
+
+    return LoggerSubscription(this);
 }
 
 void Logger::unsubscribe() 
 {
-    observer = nullptr;
+    if (observer != nullptr)
+    {
+        observer = nullptr;
+    }
 }
 
 bool Logger::hasObserver() const 
@@ -46,43 +106,19 @@ bool Logger::hasObserver() const
 
 void Logger::log(MessageStatus st, MessageView v, std::string_view msg) 
 {
-    LoggerMessage loggerMeassage {};
-
-    loggerMeassage.status = st;
-    loggerMeassage.message = msg;
-    loggerMeassage.messageTime = std::chrono::system_clock::now();
-
-    loggerMeassage.view = v;
-    loggerMeassage.userOutputProcessed = false;
+    LoggerMessage loggerMeassage(st, v, std::string(msg));
 
     Log.emplace_back(std::move(loggerMeassage));
+
+    onMessage();
 }
 
-std::string LoggerFormatter::formatText(const LoggerMessage& lg) 
+LoggerSubscription::LoggerSubscription(Logger* lg) : logger(lg) {}
+
+LoggerSubscription::~LoggerSubscription() 
 {
-    std::string line;
-    switch (lg.status)
+    if (logger != nullptr)
     {
-        case MessageStatus::INFO:
-            line = "[INFO] - ";
-            break;
-        case MessageStatus::WARNING:
-            line = "[WARNING] - ";   
-            break;
-        case MessageStatus::ERROR:
-            line = "[ERROR] - ";
-            break;
+        logger->unsubscribe();
     }
-
-    std::time_t tt = std::chrono::system_clock::to_time_t(lg.messageTime);
-    std::tm tm = *std::localtime(&tt);
-
-    std::ostringstream oss;
-    oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
-
-    line += oss.str() + " : ";
-
-    line += lg.message + "\n";
-
-    return line;
 }

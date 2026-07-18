@@ -6,47 +6,73 @@
 
 #include "UserOutput.hpp"
 
+class UserOutput;
+class Logger;
+
 enum class MessageStatus    {INFO, WARNING, ERROR};
-enum class MessageFormat    {TEXT/*, JSON, BIN*/};
+//enum class MessageFormat    {TEXT/*, JSON, BIN*/};
 enum class MessageView      {SYSTEM, USER};
 
-struct LoggerMessage 
+class LoggerMessage 
 {
-    MessageStatus status;
-    std::chrono::system_clock::time_point messageTime;
-    std::string message;
+    private:
+        MessageStatus status;
+        MessageView view;
 
-    MessageView view;
-    bool userOutputProcessed;
+        std::string message;
+
+        std::chrono::system_clock::time_point messageTime;
+
+    public:
+        LoggerMessage() = delete;
+        explicit LoggerMessage(MessageStatus st, MessageView msgv, std::string msg);
+
+        MessageStatus getStatus() const;
+        MessageView getView() const;
+        std::chrono::system_clock::time_point getMessageTime() const;
+        std::string getMessage() const;
+
+        std::string formatText() const;
+        //static std::string formatJson() const;
+        //static std::vector<std::byte> formatBinary() const;
 };
 
-class LoggerFormatter 
+/* RAII SUBSCRIPTION */
+class LoggerSubscription 
 {
-    public:
-        LoggerFormatter() = delete;
+    private:
+        /* No one other than Logger can create a subscription. */
+        friend class Logger;
 
-        static std::string formatText(const LoggerMessage& lg);
-        //static std::string formatJson(const LoggerMessage& lg);
-        //static std::vector<std::byte> formatBinary(const LoggerMessage& lg);
+        Logger* logger;
+
+        LoggerSubscription() = delete;
+        LoggerSubscription(Logger* lg);
+
+    public:
+        LoggerSubscription(const LoggerSubscription&) = delete;
+        LoggerSubscription& operator=(const LoggerSubscription&) = delete;
+
+        ~LoggerSubscription();
 };
 
 class Logger 
 {
-
     private:
-        const UserOutput* observer = nullptr;
+        const UserOutput* observer;
 
-        size_t firstUnprocessed = 0;
+        size_t firstUnprocessed;
         std::vector<LoggerMessage> Log;
 
-        Logger() = default;
+        Logger();
 
         void onMessage();
 
     public:
         static Logger& instance();
 
-        void subscribe(const UserOutput* ob);
+        /* Returns the subscription state that the user is required to save. */
+        LoggerSubscription subscribe(const UserOutput* ob);
         void unsubscribe();
         bool hasObserver() const;
 

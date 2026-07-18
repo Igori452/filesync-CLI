@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "cli/include/CLI.hpp"
+#include "CommandLineParser/include/CommandLineParser.hpp"
 
 TEST(CLI, ParseCompareCommand)
 {
@@ -16,17 +16,14 @@ TEST(CLI, ParseCompareCommand)
         target
     };
 
-    CLI cli;
+    auto ic = CommandLineParser::parseInputInstructions(4, argv);
+    EXPECT_TRUE(ic.has_value());
 
-    EXPECT_TRUE(cli.inputInstructions(4, argv));
-
-    auto input = cli.releaseInputInstructions();
-
-    EXPECT_EQ(input.command, Commands::COMPARE);
-    EXPECT_EQ(input.arguments.size(), 2);
-    EXPECT_EQ(input.arguments[0], "source");
-    EXPECT_EQ(input.arguments[1], "target");
-    EXPECT_TRUE(input.options.empty());
+    EXPECT_EQ(ic.value().command, Commands::COMPARE);
+    EXPECT_EQ(ic.value().arguments.size(), 2);
+    EXPECT_EQ(ic.value().arguments[0], "source");
+    EXPECT_EQ(ic.value().arguments[1], "target");
+    EXPECT_TRUE(ic.value().options.empty());
 }
 
 TEST(CLI, UnknownCommand)
@@ -39,9 +36,7 @@ TEST(CLI, UnknownCommand)
         command
     };
 
-    CLI cli;
-
-    EXPECT_FALSE(cli.inputInstructions(2, argv));
+    EXPECT_FALSE(CommandLineParser::parseInputInstructions(2, argv).has_value());
 }
 
 TEST(CLI, EmptyInput)
@@ -52,9 +47,7 @@ TEST(CLI, EmptyInput)
         program
     };
 
-    CLI cli;
-
-    EXPECT_FALSE(cli.inputInstructions(1, argv));
+    EXPECT_FALSE(CommandLineParser::parseInputInstructions(1, argv).has_value());
 }
 
 TEST(CLI, MissingArguments)
@@ -69,9 +62,7 @@ TEST(CLI, MissingArguments)
         source
     };
 
-    CLI cli;
-
-    EXPECT_FALSE(cli.inputInstructions(3, argv));
+    EXPECT_FALSE(CommandLineParser::parseInputInstructions(3, argv).has_value());
 }
 
 TEST(CLI, ParseOption)
@@ -90,14 +81,12 @@ TEST(CLI, ParseOption)
         recursive
     };
 
-    CLI cli;
+    auto ic = CommandLineParser::parseInputInstructions(5, argv);
 
-    EXPECT_TRUE(cli.inputInstructions(5, argv));
+    EXPECT_TRUE(ic.has_value());
 
-    auto input = cli.releaseInputInstructions();
-
-    ASSERT_EQ(input.options.size(), 1);
-    EXPECT_EQ(input.options[0], Options::RECURSIVE);
+    ASSERT_EQ(ic.value().options.size(), 1);
+    EXPECT_EQ(ic.value().options[0], Options::RECURSIVE);
 }
 
 TEST(CLI, UnknownOption)
@@ -116,9 +105,26 @@ TEST(CLI, UnknownOption)
         option
     };
 
-    CLI cli;
+    EXPECT_FALSE(CommandLineParser::parseInputInstructions(5, argv).has_value());
+}
 
-    EXPECT_FALSE(cli.inputInstructions(5, argv));
+TEST(CLI, MissedOption)
+{
+    char program[] = "program";
+    char command[] = "compare";
+    char source[] = "source";
+    char target[] = "target";
+    char option[] = "--force";
+
+    char* argv[] = {
+        program,
+        command,
+        source,
+        target,
+        option
+    };
+
+    EXPECT_FALSE(CommandLineParser::parseInputInstructions(5, argv).has_value());
 }
 
 TEST(CLI, MultipleOptions)
@@ -139,14 +145,12 @@ TEST(CLI, MultipleOptions)
         verbose
     };
 
-    CLI cli;
+    auto ic = CommandLineParser::parseInputInstructions(6, argv);
 
-    EXPECT_TRUE(cli.inputInstructions(6, argv));
+    EXPECT_TRUE(ic.has_value());
 
-    auto input = cli.releaseInputInstructions();
+    ASSERT_EQ(ic.value().options.size(), 2);
 
-    ASSERT_EQ(input.options.size(), 2);
-
-    EXPECT_EQ(input.options[0], Options::RECURSIVE);
-    EXPECT_EQ(input.options[1], Options::VERBOSE);
+    EXPECT_EQ(ic.value().options[0], Options::RECURSIVE);
+    EXPECT_EQ(ic.value().options[1], Options::VERBOSE);
 }

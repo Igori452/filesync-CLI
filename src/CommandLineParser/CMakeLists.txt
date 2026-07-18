@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(CLI)
+project(CommandLineParser)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
@@ -16,7 +16,7 @@ target_link_libraries(${PROJECT_NAME} core)
 
 ################# TESTS #################
 if (BUILD_TESTS)
-    file(GLOB TESTS "../../tests/CLI/*.cpp" 
+    file(GLOB TESTS "../../tests/CommandLineParser/*.cpp" 
                     "../../tests/main.cpp")
 
     add_executable(${PROJECT_NAME}_tests ${TESTS})

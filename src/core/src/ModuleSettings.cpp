@@ -1,5 +1,9 @@
 #include "../include/ModuleSettings.hpp"
 
+#include <algorithm>
+
+OutputUserSettings::OutputUserSettings () : verbose_(false) {}
+
 void OutputUserSettings::setSettings(const InputCommand& cmd) 
 {
     const auto& opts = cmd.options;

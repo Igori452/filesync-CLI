@@ -1,33 +1,33 @@
-#include "cli/include/CLI.hpp"
+#include "CommandLineParser/include/CommandLineParser.hpp"
 
-CLI::CLI() {}
-
-bool CLI::inputInstructions(int argc, char* argv[]) noexcept
+std::optional<InputCommand> CommandLineParser::parseInputInstructions(int argc, char* argv[])
 {
+
+    InputCommand inputCommand {};
 
     if (argc <= 1) 
     {
         // Запись в логгер, комманда отсуствует
-        return false;
+        return {};
     }
 
-    if (!parseCommand(argv[1]))
+    if (!parseCommand(argv[1], inputCommand))
     {
         // Запись в логгер, неверная комманда
-        return false;
+        return {};
     }
 
     size_t inputArgumentsCount = commandRegistry.at(inputCommand.command).argumentsCount;
     if (inputArgumentsCount > argc - 2)
     {
         // Запись в логгер, отсутсвуют аргументы для данной команды
-        return false;
+        return {};
 
     }
 
     for (size_t i = 0; i < inputArgumentsCount; ++i) 
     {
-        parseArguments(argv[2 + i]);
+        parseArguments(argv[2 + i], inputCommand);
     }
 
     // Парсинг без аргументов опций
@@ -35,26 +35,26 @@ bool CLI::inputInstructions(int argc, char* argv[]) noexcept
     while (it < argc)
     {
 
-        if(!parseOption(argv[it++]))
+        if(!parseOption(argv[it++], inputCommand))
         {
             // Запись в логгер, опция для данного логера отсутсвует
-            return false;
+            return {};
         }
     }
     
     // Запись в логгер, об успешной операции
-    return true;
+    return inputCommand;
 }
 
 
-bool CLI::parseCommand(std::string_view command) 
+bool CommandLineParser::parseCommand(std::string_view command, InputCommand& icmd) 
 {
 
     for (const auto& item : commandRegistry) 
     {
         if (item.second.commandName == command)
         {
-            inputCommand.command = item.first;
+            icmd.command = item.first;
             return true;
         }
 
@@ -63,31 +63,26 @@ bool CLI::parseCommand(std::string_view command)
     return false;
 }
 
-void CLI::parseArguments(std::string_view argument) 
+void CommandLineParser::parseArguments(std::string_view argument, InputCommand& icmd) 
 {
-    inputCommand.arguments.emplace_back(argument);
+    icmd.arguments.emplace_back(argument);
 }
 
-bool CLI::parseOption(std::string_view option) 
+bool CommandLineParser::parseOption(std::string_view option, InputCommand& icmd) 
 {
 
-    const auto& commandOptions = commandRegistry.at(inputCommand.command).options;
+    const auto& commandOptions = commandRegistry.at(icmd.command).options;
 
     for (Options opt : commandOptions) 
     {
 
         if (optionRegistry.at(opt).optionName == option)
         {
-            inputCommand.options.emplace_back(opt);
+            icmd.options.emplace_back(opt);
             return true;
         }
 
     }
 
     return false;
-}
-
-const InputCommand CLI::releaseInputInstructions() const 
-{
-    return std::move(inputCommand);
 }
