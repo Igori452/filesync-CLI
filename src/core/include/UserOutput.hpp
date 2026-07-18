@@ -25,6 +25,9 @@ class UserOutput
 
 /*
  * The class is designed to allow for easy testing of console output.
+ *
+ * Console output logger.
+ * out - Stream reference. Must outlive this object.
  */
 class ConsoleOutput : public UserOutput 
 {
