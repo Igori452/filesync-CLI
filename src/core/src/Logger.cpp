@@ -4,16 +4,26 @@
 #include <sstream>
 #include <ctime>
 
-LoggerMessage::LoggerMessage(MessageStatus st, MessageView msgv, std::string msg) 
-: status(st), view(msgv), message(std::move(msg)),
+LoggerMessage::LoggerMessage(MessageView msgv, std::string msg) 
+: view(msgv), status(MessageStatus::INFO_MSG), message(std::move(msg)),
   messageTime(std::chrono::system_clock::now()) {}
 
-MessageStatus LoggerMessage::getStatus() const 
+LoggerMessage::MessageStatus LoggerMessage::converStatusFromError(ErrorStatus es) const 
+{
+    switch (es)
+    {
+        case ErrorStatus::WARNING: return MessageStatus::WARNING_MSG;
+        case ErrorStatus::ERROR: return MessageStatus::ERROR_MSG;
+    }
+    return MessageStatus::SUCCESS_MSG;
+}
+  
+LoggerMessage::MessageStatus LoggerMessage::getStatus() const 
 {
     return status;
 }
 
-MessageView LoggerMessage::getView() const 
+LoggerMessage::MessageView LoggerMessage::getView() const 
 {
     return view;
 }
@@ -28,33 +38,14 @@ std::string LoggerMessage::getMessage() const
     return message;
 }
 
-std::string LoggerMessage::formatText() const
+LoggerSubscription::LoggerSubscription(Logger* lg) : logger(lg) {}
+
+LoggerSubscription::~LoggerSubscription() 
 {
-    std::string line;
-    switch (status)
+    if (logger != nullptr)
     {
-        case MessageStatus::INFO:
-            line = "[INFO] - ";
-            break;
-        case MessageStatus::WARNING:
-            line = "[WARNING] - ";   
-            break;
-        case MessageStatus::ERROR:
-            line = "[ERROR] - ";
-            break;
+        logger->unsubscribe();
     }
-
-    std::time_t tt = std::chrono::system_clock::to_time_t(messageTime);
-    std::tm tm = *std::localtime(&tt);
-
-    std::ostringstream oss;
-    oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
-
-    line += oss.str() + " : ";
-
-    line += message + "\n";
-
-    return line;
 }
 
 Logger::Logger() : observer(nullptr), firstUnprocessed(0) {}
@@ -104,21 +95,9 @@ bool Logger::hasObserver() const
     return (observer == nullptr ? false : true);
 }
 
-void Logger::log(MessageStatus st, MessageView v, std::string_view msg) 
+void Logger::log(LoggerMessage::MessageView msgv, std::string msg) 
 {
-    LoggerMessage loggerMeassage(st, v, std::string(msg));
-
-    Log.emplace_back(std::move(loggerMeassage));
+    Log.emplace_back(msgv, msg);
 
     onMessage();
-}
-
-LoggerSubscription::LoggerSubscription(Logger* lg) : logger(lg) {}
-
-LoggerSubscription::~LoggerSubscription() 
-{
-    if (logger != nullptr)
-    {
-        logger->unsubscribe();
-    }
 }

@@ -3,38 +3,55 @@
 #include <vector>
 #include <string>
 #include <chrono>
+#include <variant>
 
 #include "UserOutput.hpp"
+#include "ErrorCodes.hpp"
 
 class UserOutput;
 class Logger;
 
-enum class MessageStatus    {INFO, WARNING, ERROR};
-//enum class MessageFormat    {TEXT/*, JSON, BIN*/};
-enum class MessageView      {SYSTEM, USER};
 
+/**
+ * 
+ * std::string message          ErrorCode<typename ErrorEnum, typename ErrorProvider>                        
+ *        |                                                  |
+ *        |                                                  |
+ *        |                                                  |
+ *        ————————————————————————————————————————————————————
+ *                                  |
+ *                              LoggerMessage
+ * 
+ * The class combines standard messages and application errors designed within the ErrorCode class.
+ * 
+ */
 class LoggerMessage 
 {
+    public:
+        enum class MessageView      {SYSTEM, USER};
+        enum class MessageStatus    {INFO_MSG, SUCCESS_MSG, WARNING_MSG, ERROR_MSG};
+
     private:
-        MessageStatus status;
         MessageView view;
+        MessageStatus status;
 
         std::string message;
 
         std::chrono::system_clock::time_point messageTime;
 
+        MessageStatus converStatusFromError(ErrorStatus es) const;
+
     public:
         LoggerMessage() = delete;
-        explicit LoggerMessage(MessageStatus st, MessageView msgv, std::string msg);
+        explicit LoggerMessage(MessageView msgv, std::string msg);
+
+        template<typename ErrorEnum, typename ErrorProvider>
+        explicit LoggerMessage(MessageView msgv, const ErrorCode<ErrorEnum, ErrorProvider>& ec);
 
         MessageStatus getStatus() const;
         MessageView getView() const;
         std::chrono::system_clock::time_point getMessageTime() const;
         std::string getMessage() const;
-
-        std::string formatText() const;
-        //static std::string formatJson() const;
-        //static std::vector<std::byte> formatBinary() const;
 };
 
 /* RAII SUBSCRIPTION */
@@ -59,6 +76,7 @@ class LoggerSubscription
 class Logger 
 {
     private:
+        /*Uses an observer to which all logger records are sent. */
         const UserOutput* observer;
 
         size_t firstUnprocessed;
@@ -76,8 +94,21 @@ class Logger
         void unsubscribe();
         bool hasObserver() const;
 
-        void log(MessageStatus st, MessageView v, std::string_view msg);
-        
-        //void flush(std::ostream& out, MessageFormat msgf = MessageFormat::TEXT) const;
+        void log(LoggerMessage::MessageView msgv, std::string msg);
 
+        template<typename ErrorEnum, typename ErrorProvider>
+        void log(LoggerMessage::MessageView msgv, const ErrorCode<ErrorEnum, ErrorProvider>& ec);
 };
+
+template<typename ErrorEnum, typename ErrorProvider>
+LoggerMessage::LoggerMessage(MessageView msgv, const ErrorCode<ErrorEnum, ErrorProvider>& ec) 
+: view(msgv), status(this->converStatusFromError(ec.getStatus())), message(ec.message()), 
+  messageTime(std::chrono::system_clock::now()) {}
+
+template<typename ErrorEnum, typename ErrorProvider>
+void Logger::log(LoggerMessage::MessageView msgv, const ErrorCode<ErrorEnum, ErrorProvider>& ec) 
+{
+    Log.emplace_back(msgv, ec);
+
+    onMessage();
+}
