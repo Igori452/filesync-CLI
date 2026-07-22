@@ -32,9 +32,18 @@ class UserOutput
  * The lifetime of the stream must exceed the lifetime of this object; 
  * otherwise, undefined behavior occurs.
  */
+
 class ConsoleOutput : public UserOutput 
 {
     private:
+        struct Color {
+            static constexpr std::string_view RESET   = "\033[0m";
+            static constexpr std::string_view RED     = "\033[31m";
+            static constexpr std::string_view GREEN   = "\033[32m";
+            static constexpr std::string_view YELLOW  = "\033[33m";
+            static constexpr std::string_view WHITE   = "\033[37m";
+        };
+    
         std::ostream& console;
 
     public:
