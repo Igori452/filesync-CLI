@@ -4,6 +4,7 @@
 #include <string>
 #include <chrono>
 #include <variant>
+#include <type_traits>
 
 #include "UserOutput.hpp"
 #include "ErrorCodes.hpp"
@@ -25,6 +26,10 @@ class Logger;
  * The class combines standard messages and application errors designed within the ErrorCode class.
  * 
  */
+
+template<typename ErrorEnum>
+concept isEnum = std::is_enum_v<ErrorEnum>;
+
 class LoggerMessage 
 {
     public:
@@ -33,11 +38,11 @@ class LoggerMessage
 
     private:
         MessageView view;
-        MessageStatus status;
-
-        std::string message;
 
         std::chrono::system_clock::time_point messageTime;
+
+        MessageStatus status;
+        std::string message;
 
         MessageStatus converStatusFromError(ErrorStatus es) const;
 
@@ -45,8 +50,8 @@ class LoggerMessage
         LoggerMessage() = delete;
         explicit LoggerMessage(MessageView msgv, std::string msg);
 
-        template<typename ErrorEnum, typename ErrorProvider>
-        explicit LoggerMessage(MessageView msgv, const ErrorCode<ErrorEnum, ErrorProvider>& ec);
+        template<isEnum ErrorEnum>
+        explicit LoggerMessage(MessageView msgv, ErrorEnum ec);
 
         MessageStatus getStatus() const;
         MessageView getView() const;
@@ -96,17 +101,22 @@ class Logger
 
         void log(LoggerMessage::MessageView msgv, std::string msg);
 
-        template<typename ErrorEnum, typename ErrorProvider>
-        void log(LoggerMessage::MessageView msgv, const ErrorCode<ErrorEnum, ErrorProvider>& ec);
+        template<isEnum ErrorEnum>
+        void log(LoggerMessage::MessageView msgv, ErrorEnum ec);
 };
 
-template<typename ErrorEnum, typename ErrorProvider>
-LoggerMessage::LoggerMessage(MessageView msgv, const ErrorCode<ErrorEnum, ErrorProvider>& ec) 
-: view(msgv), status(this->converStatusFromError(ec.getStatus())), message(ec.message()), 
-  messageTime(std::chrono::system_clock::now()) {}
+template<isEnum ErrorEnum>
+LoggerMessage::LoggerMessage(MessageView msgv, ErrorEnum ec) 
+: view(msgv), messageTime(std::chrono::system_clock::now()) 
+{
+    ErrorCode error {ec};
 
-template<typename ErrorEnum, typename ErrorProvider>
-void Logger::log(LoggerMessage::MessageView msgv, const ErrorCode<ErrorEnum, ErrorProvider>& ec) 
+    message = error.message();
+    status = this->converStatusFromError(error.getStatus());
+}
+
+template<isEnum ErrorEnum>
+void Logger::log(LoggerMessage::MessageView msgv, ErrorEnum ec) 
 {
     Log.emplace_back(msgv, ec);
 

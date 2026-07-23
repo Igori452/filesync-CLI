@@ -7,8 +7,6 @@
 
 class LoggerMessage;
 
-enum class UserInterface {CONSOLE /*,UI, WEB...*/};
-
 class UserOutput 
 {
     protected:

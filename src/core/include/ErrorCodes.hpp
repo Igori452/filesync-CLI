@@ -1,8 +1,13 @@
 #pragma once
 
+#include <string>
+
 /* 100 <= ERRORS     <= 199 */
 /* 200 <= WARNINGS   <= 299 */
 /* 300 <= SUCCESSFUL <= 399 */
+
+template<typename ErrorEnum, typename ErrorProvider>
+class ErrorCode;
 
 /*
  * 
@@ -19,7 +24,8 @@
  * 
  */
 
-#include <string>
+
+/* CODES AND PROVIDERS */
 
 enum class CommandLineParserError : int
 {
@@ -43,6 +49,13 @@ class CommandLineParserErrorProvider
         std::string message(CommandLineParserError code) const;
 };
 
+
+/* DEDUCTION GUIDS */
+
+ErrorCode(CommandLineParserError) -> ErrorCode<CommandLineParserError, CommandLineParserErrorProvider>;
+
+
+/* UNIVERSAL ERROR CODE INTERFACE */
 enum class ErrorStatus {SUCCESSFUL, WARNING, ERROR};
 
 /* TRAITS AND STATIC POLYMORPHISM */

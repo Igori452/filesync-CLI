@@ -5,8 +5,8 @@
 #include <ctime>
 
 LoggerMessage::LoggerMessage(MessageView msgv, std::string msg) 
-: view(msgv), status(MessageStatus::INFO_MSG), message(std::move(msg)),
-  messageTime(std::chrono::system_clock::now()) {}
+: view(msgv), messageTime(std::chrono::system_clock::now()),
+  status(MessageStatus::INFO_MSG), message(std::move(msg)) {}
 
 LoggerMessage::MessageStatus LoggerMessage::converStatusFromError(ErrorStatus es) const 
 {
@@ -14,8 +14,9 @@ LoggerMessage::MessageStatus LoggerMessage::converStatusFromError(ErrorStatus es
     {
         case ErrorStatus::WARNING: return MessageStatus::WARNING_MSG;
         case ErrorStatus::ERROR: return MessageStatus::ERROR_MSG;
+        default:
+            return MessageStatus::SUCCESS_MSG;
     }
-    return MessageStatus::SUCCESS_MSG;
 }
   
 LoggerMessage::MessageStatus LoggerMessage::getStatus() const 

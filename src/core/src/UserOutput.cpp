@@ -10,9 +10,13 @@ ConsoleOutput::ConsoleOutput(OutputUserSettings st, std::ostream& out) : UserOut
 
 void ConsoleOutput::display(const LoggerMessage& lgmsg) const
 {
+    
+    if (!(lgmsg.getView() == LoggerMessage::MessageView::USER || settings.verbose())) 
+        return;
+    
     // 14:20:01 [ SYSTEM ] [  INFO   ] Message.
     // 14:20:02 [  USER  ] [ SUCCESS ] Message.
-    
+
     std::time_t time_now = std::chrono::system_clock::to_time_t(lgmsg.getMessageTime());
     
     std::tm* local_time = std::localtime(&time_now);
