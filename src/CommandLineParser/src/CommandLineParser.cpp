@@ -1,4 +1,6 @@
 #include "CommandLineParser/include/CommandLineParser.hpp"
+#include "core/include/Logger.hpp"
+#include "core/include/ErrorCodes.hpp"
 
 std::optional<InputCommand> CommandLineParser::parseInputInstructions(int argc, char* argv[])
 {
@@ -7,20 +9,29 @@ std::optional<InputCommand> CommandLineParser::parseInputInstructions(int argc, 
 
     if (argc <= 1) 
     {
-        // Запись в логгер, комманда отсуствует
+        Logger::instance().log(
+            LoggerMessage::MessageView::SYSTEM, 
+            CommandLineParserError::COMMAND_IS_EMPTY
+        );
         return {};
     }
 
     if (!parseCommand(argv[1], inputCommand))
     {
-        // Запись в логгер, неверная комманда
+        Logger::instance().log(
+            LoggerMessage::MessageView::SYSTEM, 
+            CommandLineParserError::INVALID_COMMAND
+        );
         return {};
     }
 
     size_t inputArgumentsCount = commandRegistry.at(inputCommand.command).argumentsCount;
     if (inputArgumentsCount > argc - 2)
     {
-        // Запись в логгер, отсутсвуют аргументы для данной команды
+        Logger::instance().log(
+            LoggerMessage::MessageView::SYSTEM, 
+            CommandLineParserError::INVALID_ARGUMENT
+        );
         return {};
 
     }
@@ -37,12 +48,18 @@ std::optional<InputCommand> CommandLineParser::parseInputInstructions(int argc, 
 
         if(!parseOption(argv[it++], inputCommand))
         {
-            // Запись в логгер, опция для данного логера отсутсвует
+            Logger::instance().log(
+                LoggerMessage::MessageView::SYSTEM, 
+                CommandLineParserError::INVALID_OPTION
+            );
             return {};
         }
     }
     
-    // Запись в логгер, об успешной операции
+    Logger::instance().log(
+        LoggerMessage::MessageView::SYSTEM, 
+        CommandLineParserError::PARSE_SUCCESSFUL
+    );
     return inputCommand;
 }
 

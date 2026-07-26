@@ -1,5 +1,7 @@
-#include "../include/Application.hpp"
-#include "../../core/include/ModuleSettings.hpp"
+#include "Applications/include/Application.hpp"
+#include "core/include/ModuleSettings.hpp"
+#include "Scanner/include/Scanner.hpp"
+#include "Index/include/Index.hpp"
 
 Application::Application(InputCommand command, UserInterface interface) 
     : inputCommand(std::move(command)) 
@@ -23,7 +25,18 @@ bool Application::executeInputCommand()
 
 bool Application::compare() 
 {
-    
+    Scanner scanner;
+
+    std::filesystem::path path {inputCommand.arguments.at(0)};
+
+    if (!scanner.setPathData(path)) 
+    {
+        // 
+    }
+
+    Index index(scanner.getPathData());
+
+    // index1 == index2?
 }
 
 //bool Application::sync();

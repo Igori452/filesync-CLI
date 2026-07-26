@@ -21,12 +21,12 @@ class Application
 
         const std::map<Commands, bool (Application::*)()> applicationActions 
         {
-            {Commands::COMPARE, compare},
-            {Commands::SYNC, sync},
-            {Commands::VERIFY, verify},
-            {Commands::STATUS, status},
-            {Commands::HELP, help},
-            {Commands::VERSION, version},
+            {Commands::COMPARE,     compare},
+            {Commands::SYNC,        sync},
+            {Commands::VERIFY,      verify},
+            {Commands::STATUS,      status},
+            {Commands::HELP,        help},
+            {Commands::VERSION,     version},
         };
 
     public:
