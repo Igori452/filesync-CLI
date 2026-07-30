@@ -1,13 +1,13 @@
 #include "ErrorCodes.hpp"
 
-const char* CommandLineParserErrorProvider::name() const noexcept 
+const char* CommandLineParserCategory::name() const noexcept 
 {
     return "CommandLineParser";
 }
 
-std::string CommandLineParserErrorProvider::message(CommandLineParserError code) const 
+std::string CommandLineParserCategory::message(int cd) const 
 {
-    switch (static_cast<int>(code))
+    switch (cd)
     {
         case 100: return "Command line is missing";
         case 101: return "Invalid command";
@@ -18,17 +18,41 @@ std::string CommandLineParserErrorProvider::message(CommandLineParserError code)
     return "Unknown";
 }
 
-const char* ModuleSettingsErrorProvider::name() const noexcept 
+const char* ModuleSettingsCategory::name() const noexcept 
 {
     return "ModuleSettings";
 }
 
-std::string ModuleSettingsErrorProvider::message(ModuleSettingsError code) const 
+std::string ModuleSettingsCategory::message(int cd) const 
 {
-    switch (static_cast<int>(code))
+    switch (cd)
     {
         case 200: return "Settings successfully applied";
         case 300: return "No flags were used, so default values ​​are being used for the operation";
     }
     return "Unknown";
+}
+
+ErrorCode::ErrorCode(std::error_code cd) : code(cd) 
+{
+    status = getErrorStatusFromCode();
+    /* can be extended to any category */
+}
+
+std::error_code ErrorCode::getErrorCode() const noexcept 
+{
+    return code;
+}
+
+ErrorStatus ErrorCode::getErrorStatusFromCode () const 
+{
+    int codeVal = code.value();
+    if (codeVal >= 100 && codeVal <= 199) return ErrorStatus::ERROR;
+    else if (codeVal >= 200 && codeVal <= 299) return ErrorStatus::WARNING;
+    else return ErrorStatus::SUCCESSFUL;
+}
+
+ErrorStatus ErrorCode::getStatus() const 
+{
+    return status;
 }
