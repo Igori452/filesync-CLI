@@ -4,23 +4,15 @@
 
 class Settings 
 {
+    private:
+        bool verbose_ = false;
+        bool recursive_ = false;
+
     public:
-        virtual void setSettings(const InputCommand& cmd) = 0;
-        virtual ~Settings() = default;
+        Settings() = delete;
+        Settings(const std::vector<Options>& opt);
+
+        bool verbose() const;
+        bool recursive() const;
 
 };
-
-class OutputUserSettings : public Settings 
-{
-    private:
-        bool verbose_;
-
-    public:
-        /* Default settings */
-        OutputUserSettings();
-
-        /* Custom settings */
-        void setSettings(const InputCommand& cmd) override;
-        
-        bool verbose() const;
-};  

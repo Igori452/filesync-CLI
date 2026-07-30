@@ -17,3 +17,18 @@ std::string CommandLineParserErrorProvider::message(CommandLineParserError code)
     }
     return "Unknown";
 }
+
+const char* ModuleSettingsErrorProvider::name() const noexcept 
+{
+    return "ModuleSettings";
+}
+
+std::string ModuleSettingsErrorProvider::message(ModuleSettingsError code) const 
+{
+    switch (static_cast<int>(code))
+    {
+        case 200: return "Settings successfully applied";
+        case 300: return "No flags were used, so default values ​​are being used for the operation";
+    }
+    return "Unknown";
+}

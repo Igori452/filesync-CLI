@@ -84,7 +84,7 @@ struct OptionInfo
 {
 
     const std::string_view optionName;
-    const std::string_view commandDescription;
+    const std::string_view optionDescription;
 
 };
 

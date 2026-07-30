@@ -1,5 +1,12 @@
 #include "Scanner/include/Scanner.hpp"
 
 
-Scanner(std::filesystem::path path) {}
+bool computeAllPaths(const std::string_view spth) 
+{
+    
+}
 
+const std::vector<std::filesystem::path>& Scanner::getAllPaths() const 
+{
+    return allPaths;
+}

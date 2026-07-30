@@ -3,7 +3,7 @@
 #include "Scanner/include/Scanner.hpp"
 #include "Index/include/Index.hpp"
 
-Application::Application(InputCommand command, UserInterface interface) 
+Application::Application(InputCommand&& command, UserInterface interface) 
     : inputCommand(std::move(command)) 
     {
        switch (interface)
@@ -15,7 +15,13 @@ Application::Application(InputCommand command, UserInterface interface)
                 output = std::make_unique<ConsoleOutput>(std::move(settings));
                 break;
        }
+       
     }
+
+const InputCommand& Application::getInputCommand() const 
+{
+    return inputCommand;
+}
 
 bool Application::executeInputCommand() 
 {
@@ -27,14 +33,12 @@ bool Application::compare()
 {
     Scanner scanner;
 
-    std::filesystem::path path {inputCommand.arguments.at(0)};
-
-    if (!scanner.setPathData(path)) 
+    if (!scanner.computeAllPaths(inputCommand.arguments.at(0))) 
     {
         // 
     }
 
-    Index index(scanner.getPathData());
+    Index index(scanner.getAllPaths());
 
     // index1 == index2?
 }

@@ -50,9 +50,26 @@ class CommandLineParserErrorProvider
 };
 
 
-/* DEDUCTION GUIDS */
+enum class ModuleSettingsError : int
+{
+    /* WARNINGS */
+    DEAFAULT_EXTRACT = 200,
 
+    /* SUCCESSFUL */
+    EXTRACT_SUCCESSFUL = 300,
+    
+};
+
+class ModuleSettingsErrorProvider 
+{
+    public:
+        const char* name() const noexcept;
+        std::string message(ModuleSettingsError code) const;
+};
+
+/* DEDUCTION GUIDS */
 ErrorCode(CommandLineParserError) -> ErrorCode<CommandLineParserError, CommandLineParserErrorProvider>;
+ErrorCode(ModuleSettingsError) -> ErrorCode<ModuleSettingsError, ModuleSettingsErrorProvider>;
 
 
 /* UNIVERSAL ERROR CODE INTERFACE */

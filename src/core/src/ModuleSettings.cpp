@@ -1,19 +1,27 @@
 #include "../include/ModuleSettings.hpp"
 
-#include <algorithm>
-
-OutputUserSettings::OutputUserSettings () : verbose_(false) {}
-
-void OutputUserSettings::setSettings(const InputCommand& cmd) 
+Settings::Settings(const std::vector<Options>& options)
 {
-    const auto& opts = cmd.options;
-    if (std::find(std::begin(opts), std::end(opts), Options::VERBOSE) != std::end(opts))
-        verbose_ = true;
-    else 
-        verbose_ = false;
+    for (const auto& opt : options) 
+    {
+        switch (opt)
+        {
+            case Options::VERBOSE:
+                verbose_ = true;
+                break;
+            case Options::RECURSIVE:
+                recursive_ = true;
+                break;
+        }
+    }
 }
 
-bool OutputUserSettings::verbose() const 
+bool Settings::verbose() const 
 {
     return verbose_;
+}
+
+bool Settings::recursive() const 
+{
+    return recursive_;
 }

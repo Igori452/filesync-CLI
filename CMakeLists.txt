@@ -15,3 +15,4 @@ endif()
 
 add_subdirectory(src/core)
 add_subdirectory(src/CommandLineParser)
+add_subdirectory(src/Scanner)

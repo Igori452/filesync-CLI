@@ -4,6 +4,7 @@
 
 #include "core/include/Instructions.hpp"
 #include "core/include/UserOutput.hpp"
+#include "core/include/ModuleSettings.hpp"
 
 class Application 
 {
@@ -31,8 +32,9 @@ class Application
 
     public:
         Application() = delete;
-        Application(InputCommand command, UserInterface interface = UserInterface::CONSOLE);
+        Application(InputCommand&& command, UserInterface interface = UserInterface::CONSOLE);
 
-        // выбор нужной команды
+        const InputCommand& getInputCommand() const;
+
         bool executeInputCommand();
 };
