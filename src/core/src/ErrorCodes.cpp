@@ -33,6 +33,20 @@ std::string ModuleSettingsCategory::message(int cd) const
     return "Unknown";
 }
 
+const char* LoggerCategory::name() const noexcept 
+{
+    return "Logger";
+}
+
+std::string LoggerCategory::message(int cd) const 
+{
+    switch (cd)
+    {
+        case 300: return "Logger successfuly initialisation";
+    }
+    return "Unknown";
+}
+
 ErrorCode::ErrorCode(std::error_code cd) : code(cd) 
 {
     status = getErrorStatusFromCode();

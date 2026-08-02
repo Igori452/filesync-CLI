@@ -51,11 +51,24 @@ enum class CommandLineParserError : int
 
 enum class ModuleSettingsError : int
 {
+    /* ERRORS */
+
     /* WARNINGS */
     DEAFAULT_EXTRACT = 200,
 
     /* SUCCESSFUL */
     EXTRACT_SUCCESSFUL = 300,
+    
+};
+
+enum class LoggerError : int
+{
+    /* ERRORS */
+
+    /* WARNINGS */
+
+    /* SUCCESSFUL */
+    LOGGER_INIT_SUCCESSFUL = 300,
     
 };
 
@@ -66,6 +79,9 @@ namespace std
 
     template<>
     struct is_error_code_enum<ModuleSettingsError> : true_type {};
+
+    template<>
+    struct is_error_code_enum<LoggerError> : true_type {};
 }
 
 class CommandLineParserCategory : public std::error_category 
@@ -76,6 +92,13 @@ class CommandLineParserCategory : public std::error_category
 };
 
 class ModuleSettingsCategory : public std::error_category 
+{
+    public:
+        const char* name() const noexcept override;
+        std::string message(int cd) const override;
+};
+
+class LoggerCategory : public std::error_category 
 {
     public:
         const char* name() const noexcept override;
@@ -97,6 +120,11 @@ inline std::error_code make_error_code(CommandLineParserError code)
 inline std::error_code make_error_code(ModuleSettingsError code) 
 {
     return std::error_code(static_cast<int>(code), get_category<ModuleSettingsCategory>());
+}
+
+inline std::error_code make_error_code(LoggerError code) 
+{
+    return std::error_code(static_cast<int>(code), get_category<LoggerCategory>());
 }
 
 /*

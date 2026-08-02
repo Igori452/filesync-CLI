@@ -4,27 +4,16 @@
 #include <sstream>
 #include <ctime>
 
-LoggerMessage::LoggerMessage(MessageView msgv, std::string msg) 
+LoggerMessage::LoggerMessage(View msgv, ErrorCode ec) 
 : view(msgv), messageTime(std::chrono::system_clock::now()),
-  status(MessageStatus::INFO_MSG), message(std::move(msg)) {}
-
-LoggerMessage::MessageStatus LoggerMessage::converStatusFromError(ErrorStatus es) const 
-{
-    switch (es)
-    {
-        case ErrorStatus::WARNING: return MessageStatus::WARNING_MSG;
-        case ErrorStatus::ERROR: return MessageStatus::ERROR_MSG;
-        default:
-            return MessageStatus::SUCCESS_MSG;
-    }
-}
+   errorCode(std::move(ec)) {}
   
-LoggerMessage::MessageStatus LoggerMessage::getStatus() const 
+ErrorCode LoggerMessage::getErrorCode() const 
 {
-    return status;
+    return errorCode;
 }
 
-LoggerMessage::MessageView LoggerMessage::getView() const 
+LoggerMessage::View LoggerMessage::getView() const 
 {
     return view;
 }
@@ -34,71 +23,42 @@ std::chrono::system_clock::time_point LoggerMessage::getMessageTime() const
     return messageTime;
 }
 
-std::string LoggerMessage::getMessage() const 
+Logger::Logger() : outputInterface(nullptr) 
 {
-    return message;
-}
-
-LoggerSubscription::LoggerSubscription(Logger* lg) : logger(lg) {}
-
-LoggerSubscription::~LoggerSubscription() 
-{
-    if (logger != nullptr)
-    {
-        logger->unsubscribe();
-    }
-}
-
-Logger::Logger() : observer(nullptr), firstUnprocessed(0) {}
-
-Logger& Logger::instance() 
-{
-    static Logger logger;
-    return logger;
+    Log.emplace_back(LoggerMessage::View::SYSTEM, ErrorCode {LoggerError::LOGGER_INIT_SUCCESSFUL});
+    unprocessedIterator = std::begin(Log);
 }
 
 void Logger::onMessage() 
 {
-    if (observer == nullptr)
+    if (outputInterface == nullptr)
         return;
+
+    size_t ind = 0;    
+    std::for_each(unprocessedIterator, std::end(Log), [&]() mutable {
+        outputInterface->display(*(unprocessedIterator + ind++));
+    });
     
-    if (firstUnprocessed != Log.size()) 
-    {
-        for (; firstUnprocessed < Log.size(); ++firstUnprocessed) 
-        {
-            observer->display(Log[firstUnprocessed]);
-        }
-    }
 }
 
-LoggerSubscription Logger::subscribe(const UserOutput* ob) 
+void Logger::setOutputInterface(const UserOutput* ob) 
 {
-    observer = ob;
+    outputInterface = ob;
 
-    if (firstUnprocessed != Log.size()) 
+    if (unprocessedIterator != std::end(Log)) 
     {
         onMessage();
     }
-
-    return LoggerSubscription(this);
 }
 
-void Logger::unsubscribe() 
+bool Logger::hasOutputInterface() const 
 {
-    if (observer != nullptr)
-    {
-        observer = nullptr;
-    }
+    return (outputInterface == nullptr ? false : true);
 }
 
-bool Logger::hasObserver() const 
+void Logger::log(LoggerMessage::View msgv, ErrorCode ec) 
 {
-    return (observer == nullptr ? false : true);
-}
-
-void Logger::log(LoggerMessage::MessageView msgv, std::string msg) 
-{
-    Log.emplace_back(msgv, msg);
+    Log.emplace_back(msgv, ec);
 
     onMessage();
 }
