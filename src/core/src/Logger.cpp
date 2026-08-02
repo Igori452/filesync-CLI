@@ -41,6 +41,11 @@ void Logger::onMessage()
     
 }
 
+std::error_code Logger::saveLogToFile() const 
+{
+    /** TODO */
+}
+
 void Logger::setOutputInterface(const UserOutput* ob) 
 {
     outputInterface = ob;
@@ -56,7 +61,7 @@ bool Logger::hasOutputInterface() const
     return (outputInterface == nullptr ? false : true);
 }
 
-void Logger::log(LoggerMessage::View msgv, ErrorCode ec) 
+std::error_code Logger::log(LoggerMessage::View msgv, ErrorCode ec) 
 {
     Log.emplace_back(msgv, ec);
 

@@ -40,11 +40,14 @@ class Logger
 
         void onMessage();
 
+        /* Save and clear Log */
+        std::error_code saveLogToFile() const; 
+
     public:
         Logger();
 
         void setOutputInterface(const UserOutput* ob);
         bool hasOutputInterface() const;
 
-        void log(LoggerMessage::View msgv, ErrorCode ec);
+        std::error_code log(LoggerMessage::View msgv, ErrorCode ec);
 };
