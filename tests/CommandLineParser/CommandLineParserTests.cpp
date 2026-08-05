@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "CommandLineParser/include/CommandLineParser.hpp"
+#include "Core/include/ErrorCodes.hpp"
 
 TEST(CLI, ParseCompareCommand)
 {
@@ -16,14 +17,19 @@ TEST(CLI, ParseCompareCommand)
         target
     };
 
-    auto ic = CommandLineParser::parseInputInstructions(4, argv);
-    EXPECT_TRUE(ic.has_value());
+    int argc = sizeof(argv) / sizeof(char*);
 
-    EXPECT_EQ(ic.value().command, Commands::COMPARE);
-    EXPECT_EQ(ic.value().arguments.size(), 2);
-    EXPECT_EQ(ic.value().arguments[0], "source");
-    EXPECT_EQ(ic.value().arguments[1], "target");
-    EXPECT_TRUE(ic.value().options.empty());
+    const auto[code, ic] {CommandLineParser::parseInputInstructions(argc, argv)}; 
+
+    ErrorCode er {code};
+    EXPECT_EQ(er.getStatus(), ErrorStatus::SUCCESSFUL);
+    EXPECT_EQ(er.getErrorCode(), CommandLineParserError::PARSE_SUCCESSFUL);
+
+    EXPECT_EQ(ic.command, Commands::COMPARE);
+    EXPECT_EQ(ic.arguments.size(), 2);
+    EXPECT_EQ(ic.arguments[0], source);
+    EXPECT_EQ(ic.arguments[1], target);
+    EXPECT_TRUE(ic.options.empty());
 }
 
 TEST(CLI, UnknownCommand)
@@ -36,7 +42,18 @@ TEST(CLI, UnknownCommand)
         command
     };
 
-    EXPECT_FALSE(CommandLineParser::parseInputInstructions(2, argv).has_value());
+    int argc = sizeof(argv) / sizeof(char*);
+
+    const auto [code, ic] {CommandLineParser::parseInputInstructions(argc, argv)};
+    ErrorCode er {code};
+
+    EXPECT_EQ(er.getStatus(), ErrorStatus::ERROR);
+    EXPECT_EQ(er.getErrorCode().value(), static_cast<int>(CommandLineParserError::INVALID_COMMAND));
+
+    EXPECT_EQ(ic.command, Commands::UNKNOWN);
+
+    EXPECT_TRUE(ic.arguments.empty());
+    EXPECT_TRUE(ic.options.empty());
 }
 
 TEST(CLI, EmptyInput)
@@ -47,7 +64,19 @@ TEST(CLI, EmptyInput)
         program
     };
 
-    EXPECT_FALSE(CommandLineParser::parseInputInstructions(1, argv).has_value());
+    int argc = sizeof(argv) / sizeof(char*);
+
+    const auto [code, ic] {CommandLineParser::parseInputInstructions(argc, argv)};
+    ErrorCode er {code};
+
+    EXPECT_EQ(er.getStatus(), ErrorStatus::ERROR);
+    EXPECT_EQ(er.getErrorCode().value(), static_cast<int>(CommandLineParserError::COMMAND_IS_EMPTY));
+
+    EXPECT_EQ(ic.command, Commands::UNKNOWN);
+
+    EXPECT_TRUE(ic.arguments.empty());
+    EXPECT_TRUE(ic.options.empty());
+
 }
 
 TEST(CLI, MissingArguments)
@@ -62,7 +91,18 @@ TEST(CLI, MissingArguments)
         source
     };
 
-    EXPECT_FALSE(CommandLineParser::parseInputInstructions(3, argv).has_value());
+    int argc = sizeof(argv) / sizeof(char*);
+
+    const auto [code, ic] {CommandLineParser::parseInputInstructions(argc, argv)};
+    ErrorCode er {code};
+
+    EXPECT_EQ(er.getStatus(), ErrorStatus::ERROR);
+    EXPECT_EQ(er.getErrorCode().value(), static_cast<int>(CommandLineParserError::INVALID_ARGUMENT));
+
+    EXPECT_EQ(ic.command, Commands::UNKNOWN);
+
+    EXPECT_TRUE(ic.arguments.empty());
+    EXPECT_TRUE(ic.options.empty());
 }
 
 TEST(CLI, ParseOption)
@@ -81,12 +121,16 @@ TEST(CLI, ParseOption)
         recursive
     };
 
-    auto ic = CommandLineParser::parseInputInstructions(5, argv);
+    int argc = sizeof(argv) / sizeof(char*);
 
-    EXPECT_TRUE(ic.has_value());
+    const auto [code, ic] {CommandLineParser::parseInputInstructions(argc, argv)};
+    ErrorCode er {code};
 
-    ASSERT_EQ(ic.value().options.size(), 1);
-    EXPECT_EQ(ic.value().options[0], Options::RECURSIVE);
+    EXPECT_EQ(er.getStatus(), ErrorStatus::SUCCESSFUL);
+    EXPECT_EQ(er.getErrorCode().value(), static_cast<int>(CommandLineParserError::PARSE_SUCCESSFUL));
+
+    ASSERT_EQ(ic.options.size(), 1);
+    EXPECT_EQ(ic.options[0], Options::RECURSIVE);
 }
 
 TEST(CLI, UnknownOption)
@@ -105,7 +149,18 @@ TEST(CLI, UnknownOption)
         option
     };
 
-    EXPECT_FALSE(CommandLineParser::parseInputInstructions(5, argv).has_value());
+    int argc = sizeof(argv) / sizeof(char*);
+
+    const auto [code, ic] {CommandLineParser::parseInputInstructions(argc, argv)};
+    ErrorCode er {code};
+
+    EXPECT_EQ(er.getStatus(), ErrorStatus::ERROR);
+    EXPECT_EQ(er.getErrorCode().value(), static_cast<int>(CommandLineParserError::INVALID_OPTION));
+
+    EXPECT_EQ(ic.command, Commands::UNKNOWN);
+
+    EXPECT_TRUE(ic.arguments.empty());
+    EXPECT_TRUE(ic.options.empty());
 }
 
 TEST(CLI, MissedOption)
@@ -124,7 +179,18 @@ TEST(CLI, MissedOption)
         option
     };
 
-    EXPECT_FALSE(CommandLineParser::parseInputInstructions(5, argv).has_value());
+    int argc = sizeof(argv) / sizeof(char*);
+
+    const auto [code, ic] {CommandLineParser::parseInputInstructions(argc, argv)};
+    ErrorCode er {code};
+
+    EXPECT_EQ(er.getStatus(), ErrorStatus::ERROR);
+    EXPECT_EQ(er.getErrorCode().value(), static_cast<int>(CommandLineParserError::INVALID_OPTION));
+
+    EXPECT_EQ(ic.command, Commands::UNKNOWN);
+
+    EXPECT_TRUE(ic.arguments.empty());
+    EXPECT_TRUE(ic.options.empty());
 }
 
 TEST(CLI, MultipleOptions)
@@ -145,12 +211,16 @@ TEST(CLI, MultipleOptions)
         verbose
     };
 
-    auto ic = CommandLineParser::parseInputInstructions(6, argv);
+    int argc = sizeof(argv) / sizeof(char*);
 
-    EXPECT_TRUE(ic.has_value());
+    const auto [code, ic] {CommandLineParser::parseInputInstructions(argc, argv)};
+    ErrorCode er {code};
 
-    ASSERT_EQ(ic.value().options.size(), 2);
+    EXPECT_EQ(er.getStatus(), ErrorStatus::SUCCESSFUL);
+    EXPECT_EQ(er.getErrorCode().value(), static_cast<int>(CommandLineParserError::PARSE_SUCCESSFUL));
 
-    EXPECT_EQ(ic.value().options[0], Options::RECURSIVE);
-    EXPECT_EQ(ic.value().options[1], Options::VERBOSE);
+    ASSERT_EQ(ic.options.size(), 2);
+
+    EXPECT_EQ(ic.options[0], Options::RECURSIVE);
+    EXPECT_EQ(ic.options[1], Options::VERBOSE);
 }

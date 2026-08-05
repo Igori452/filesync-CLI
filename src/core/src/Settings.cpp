@@ -1,4 +1,4 @@
-#include "../include/ModuleSettings.hpp"
+#include "../include/Settings.hpp"
 
 Settings::Settings(const std::vector<Options>& options)
 {

@@ -2,11 +2,11 @@
 #include <sstream>
 #include <iomanip>
 
-#include "../include/UserOutput.hpp"
+#include "../include/OutputInterface.hpp"
 
-UserOutput::UserOutput(OutputUserSettings st) : settings(std::move(st)) {}
+OutputInterface::OutputInterface(OutputUserSettings st) : settings(std::move(st)) {}
 
-ConsoleOutput::ConsoleOutput(OutputUserSettings st, std::ostream& out) : UserOutput(std::move(st)), console(out) {}
+ConsoleOutput::ConsoleOutput(OutputUserSettings st, std::ostream& out) : OutputInterface(std::move(st)), console(out) {}
 
 void ConsoleOutput::display(const LoggerMessage& lgmsg) const
 {

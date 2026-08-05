@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(Index)
+project(OutputInterface)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
@@ -16,7 +16,7 @@ target_link_libraries(${PROJECT_NAME} core)
 
 ################# TESTS #################
 if (BUILD_TESTS)
-    file(GLOB TESTS "../../tests/Index/*.cpp" 
+    file(GLOB TESTS "../../tests/${PROJECT_NAME}/*.cpp" 
                     "../../tests/main.cpp")
 
     add_executable(${PROJECT_NAME}_tests ${TESTS})

@@ -7,6 +7,11 @@
 enum class Commands 
 {
     /*
+     * Default command for default initialization (to avoid UB).
+     */
+    UNKNOWN,
+
+    /*
      * Compare the contents of two directories 
      * and identify differences.
      */
@@ -156,7 +161,7 @@ const std::map<Commands, CommandInfo> commandRegistry
 struct InputCommand
 {
 
-    Commands command;
+    Commands command = Commands::UNKNOWN;
     std::vector<std::string> arguments;
     std::vector<Options> options;
 

@@ -1,19 +1,26 @@
 #pragma once
 
 #include <optional>
+#include <vector>
 
-#include "core/include/Instructions.hpp"
+#include "Core/include/Instructions.hpp"
+#include <system_error>
 
 /* FACTORY */
 class CommandLineParser 
 {
-
     private:
-        static bool parseCommand(std::string_view command, InputCommand& icmd);
-        static void parseArguments(std::string_view argument, InputCommand& icmd);
-        static bool parseOption(std::string_view option, InputCommand& icmd);
+        static std::optional<Commands> parseCommand(std::string_view command);
+        static std::optional<Options> parseOption(std::string_view option, Commands cmd);
 
     public:
         CommandLineParser() = delete;
-        static std::optional<InputCommand> parseInputInstructions(int argc, char* argv[]);
+
+        struct ParseResult 
+        {
+            std::error_code code;
+            InputCommand inputCommand;
+        };
+
+        static ParseResult parseInputInstructions(int argc, char* argv[]);
 };

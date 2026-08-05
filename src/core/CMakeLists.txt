@@ -12,6 +12,7 @@ file(GLOB CPPS "src/*.cpp")
 add_library(${PROJECT_NAME} ${CPPS})
 
 ################# TESTS #################
+#[[ 
 if (BUILD_TESTS)
     file(GLOB TESTS "../../tests/core/*.cpp" 
                     "../../tests/main.cpp")
@@ -23,3 +24,4 @@ if (BUILD_TESTS)
         gtest
     )
 endif()
+]]

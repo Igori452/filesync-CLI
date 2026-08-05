@@ -1,105 +1,74 @@
 #include "CommandLineParser/include/CommandLineParser.hpp"
-#include "core/include/Logger.hpp"
-#include "core/include/ErrorCodes.hpp"
+#include "Core/include/ErrorCodes.hpp"
 
-std::optional<InputCommand> CommandLineParser::parseInputInstructions(int argc, char* argv[])
+CommandLineParser::ParseResult CommandLineParser::parseInputInstructions(int argc, char* argv[])
 {
-
-    InputCommand inputCommand {};
 
     if (argc <= 1) 
     {
-        Logger::instance().log(
-            LoggerMessage::MessageView::SYSTEM, 
-            CommandLineParserError::COMMAND_IS_EMPTY
-        );
-        return {};
+        return {make_error_code(CommandLineParserError::COMMAND_IS_EMPTY), {}};
     }
 
-    if (!parseCommand(argv[1], inputCommand))
+    const auto cmdParse {parseCommand(argv[1])};
+
+    if (!cmdParse.has_value())
     {
-        Logger::instance().log(
-            LoggerMessage::MessageView::SYSTEM, 
-            CommandLineParserError::INVALID_COMMAND
-        );
-        return {};
-    }
+        return {make_error_code(CommandLineParserError::INVALID_COMMAND), {}};
+    } 
 
+    InputCommand inputCommand {};
+    inputCommand.command = cmdParse.value();
+    
     size_t inputArgumentsCount = commandRegistry.at(inputCommand.command).argumentsCount;
     if (inputArgumentsCount > argc - 2)
     {
-        Logger::instance().log(
-            LoggerMessage::MessageView::SYSTEM, 
-            CommandLineParserError::INVALID_ARGUMENT
-        );
-        return {};
-
+        return {make_error_code(CommandLineParserError::INVALID_ARGUMENT), {}};
     }
 
     for (size_t i = 0; i < inputArgumentsCount; ++i) 
     {
-        parseArguments(argv[2 + i], inputCommand);
+        inputCommand.arguments.emplace_back(argv[i + 2]);
     }
 
-    // Парсинг без аргументов опций
     size_t it = 2 + inputArgumentsCount;
     while (it < argc)
     {
-
-        if(!parseOption(argv[it++], inputCommand))
+        const auto optParse {parseOption(argv[it++], inputCommand.command)};
+        if(!optParse.has_value())
         {
-            Logger::instance().log(
-                LoggerMessage::MessageView::SYSTEM, 
-                CommandLineParserError::INVALID_OPTION
-            );
-            return {};
+            return {make_error_code(CommandLineParserError::INVALID_OPTION) , {}};
         }
+        inputCommand.options.emplace_back(optParse.value());
     }
     
-    Logger::instance().log(
-        LoggerMessage::MessageView::SYSTEM, 
-        CommandLineParserError::PARSE_SUCCESSFUL
-    );
-    return inputCommand;
+    return {make_error_code(CommandLineParserError::PARSE_SUCCESSFUL), std::move(inputCommand)};
 }
 
-
-bool CommandLineParser::parseCommand(std::string_view command, InputCommand& icmd) 
+std::optional<Commands> CommandLineParser::parseCommand(std::string_view command) 
 {
 
     for (const auto& item : commandRegistry) 
     {
         if (item.second.commandName == command)
         {
-            icmd.command = item.first;
-            return true;
+            return item.first;
         }
-
     }
 
-    return false;
+    return std::nullopt;
 }
 
-void CommandLineParser::parseArguments(std::string_view argument, InputCommand& icmd) 
+std::optional<Options> CommandLineParser::parseOption(std::string_view option, Commands cmd) 
 {
-    icmd.arguments.emplace_back(argument);
-}
-
-bool CommandLineParser::parseOption(std::string_view option, InputCommand& icmd) 
-{
-
-    const auto& commandOptions = commandRegistry.at(icmd.command).options;
+    const auto& commandOptions = commandRegistry.at(cmd).options;
 
     for (Options opt : commandOptions) 
     {
-
         if (optionRegistry.at(opt).optionName == option)
         {
-            icmd.options.emplace_back(opt);
-            return true;
+            return opt ;
         }
-
     }
 
-    return false;
+    return std::nullopt;
 }

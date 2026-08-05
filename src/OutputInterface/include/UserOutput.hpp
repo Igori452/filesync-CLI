@@ -9,17 +9,17 @@ class LoggerMessage;
 
 enum class UserInterface {CONSOLE /*,UI, WEB*/};
 
-class UserOutput 
+class OutputInterface 
 {
     protected:
         OutputUserSettings settings;
 
     public:
-        UserOutput() = delete;
-        explicit UserOutput(OutputUserSettings st);
+        OutputInterface() = delete;
+        explicit OutputInterface(OutputUserSettings st);
 
         virtual void display(const LoggerMessage& lgmsg) const = 0;
-        virtual ~UserOutput() = default;
+        virtual ~OutputInterface() = default;
 
 };
 
@@ -33,7 +33,7 @@ class UserOutput
  * otherwise, undefined behavior occurs.
  */
 
-class ConsoleOutput : public UserOutput 
+class ConsoleOutput : public OutputInterface 
 {
     private:
         struct Color {
