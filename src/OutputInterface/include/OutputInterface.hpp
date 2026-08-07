@@ -2,21 +2,19 @@
 
 #include <iostream>
 
-#include "ModuleSettings.hpp"
-#include "Logger.hpp"
-
-class LoggerMessage;
+#include "Core/include/Settings.hpp"
+#include "Logger/include/LoggerMessage.hpp"
 
 enum class UserInterface {CONSOLE /*,UI, WEB*/};
 
 class OutputInterface 
 {
     protected:
-        OutputUserSettings settings;
+        const Settings& settings;
 
     public:
         OutputInterface() = delete;
-        explicit OutputInterface(OutputUserSettings st);
+        explicit OutputInterface(const Settings& st);
 
         virtual void display(const LoggerMessage& lgmsg) const = 0;
         virtual ~OutputInterface() = default;
@@ -41,13 +39,12 @@ class ConsoleOutput : public OutputInterface
             static constexpr std::string_view RED     = "\033[31m";
             static constexpr std::string_view GREEN   = "\033[32m";
             static constexpr std::string_view YELLOW  = "\033[33m";
-            static constexpr std::string_view WHITE   = "\033[37m";
         };
     
         std::ostream& console;
 
     public:
-        explicit ConsoleOutput(OutputUserSettings st, std::ostream& out = std::cout);
+        explicit ConsoleOutput(const Settings& st, std::ostream& out = std::cout);
 
         void display(const LoggerMessage& lgmsg) const override;
 

@@ -12,7 +12,7 @@ file(GLOB CPPS "src/*.cpp")
 add_library(${PROJECT_NAME} ${CPPS})
 
 # INCLUDE CORE MODULE
-target_link_libraries(${PROJECT_NAME} core)
+target_link_libraries(${PROJECT_NAME} CoreUtility)
 
 ################# TESTS #################
 if (BUILD_TESTS)

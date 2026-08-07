@@ -12,11 +12,11 @@ file(GLOB CPPS "src/*.cpp")
 add_library(${PROJECT_NAME} ${CPPS})
 
 # INCLUDE CORE MODULE
-target_link_libraries(${PROJECT_NAME} core)
+target_link_libraries(${PROJECT_NAME} CoreUtility)
 
 ################# TESTS #################
 if (BUILD_TESTS)
-    file(GLOB TESTS "../../tests/CommandLineParser/*.cpp" 
+    file(GLOB TESTS "../../tests/${PROJECT_NAME}/*.cpp" 
                     "../../tests/main.cpp")
 
     add_executable(${PROJECT_NAME}_tests ${TESTS})

@@ -4,14 +4,14 @@
 
 #include "../include/OutputInterface.hpp"
 
-OutputInterface::OutputInterface(OutputUserSettings st) : settings(std::move(st)) {}
+OutputInterface::OutputInterface(const Settings& st) : settings(st) {}
 
-ConsoleOutput::ConsoleOutput(OutputUserSettings st, std::ostream& out) : OutputInterface(std::move(st)), console(out) {}
+ConsoleOutput::ConsoleOutput(const Settings& st, std::ostream& out) : OutputInterface(st), console(out) {}
 
 void ConsoleOutput::display(const LoggerMessage& lgmsg) const
 {
     
-    if (!(lgmsg.getView() == LoggerMessage::MessageView::USER || settings.verbose())) 
+    if (!(lgmsg.getView() == LoggerMessage::View::USER || settings.verbose())) 
         return;
     
     // 14:20:01 [ SYSTEM ] [  INFO   ] Message.
@@ -28,38 +28,36 @@ void ConsoleOutput::display(const LoggerMessage& lgmsg) const
 
     switch (lgmsg.getView())
     {
-        case LoggerMessage::MessageView::SYSTEM:
+        case LoggerMessage::View::SYSTEM:
             formatMessage += "[ SYSTEM ] ";
             break;
-        case LoggerMessage::MessageView::USER:
+        case LoggerMessage::View::USER:
             formatMessage += "[  USER  ] ";
             break;
     }
 
+    ErrorCode err {lgmsg.getErrorCode()};
+
     std::string_view color = Color::RESET;
     std::string_view status = "[         ]";
-    switch (lgmsg.getStatus())
+    switch (err.getStatus())
     {
-        case LoggerMessage::MessageStatus::INFO_MSG:
-            color = Color::WHITE;
-            status = "[  INFO   ] ";
-            break;
-        case LoggerMessage::MessageStatus::SUCCESS_MSG:
+        case ErrorStatus::SUCCESSFUL:
             color = Color::GREEN;
             status = "[ SUCCESS ] ";
             break;
 
-        case LoggerMessage::MessageStatus::WARNING_MSG:
+        case ErrorStatus::WARNING:
             color = Color::YELLOW;
             status = "[ WARNING ] ";
             break;
 
-        case LoggerMessage::MessageStatus::ERROR_MSG:
+        case ErrorStatus::ERROR:
             color = Color::RED;
             status = "[  ERROR  ] ";
             break;
     }
 
     console << formatMessage << color << status << Color::RESET 
-        << lgmsg.getMessage() << "\n";
+        << err.getErrorCode().message() << "\n";
 }

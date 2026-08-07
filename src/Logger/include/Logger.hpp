@@ -2,52 +2,38 @@
 
 #include <vector>
 #include <string>
-#include <chrono>
+#include <optional>
 
-#include "UserOutput.hpp"
-#include "ErrorCodes.hpp"
+#include <filesystem>
 
-class UserOutput;
-
-class LoggerMessage 
-{
-    public:
-        enum class View {SYSTEM, USER};
-
-    private:
-        View view;
-        std::chrono::system_clock::time_point messageTime;
-        ErrorCode errorCode;
-
-    public:
-        LoggerMessage() = delete;
-
-        explicit LoggerMessage(View msgv, ErrorCode ec);
-
-        View getView() const;
-        std::chrono::system_clock::time_point getMessageTime() const;
-        ErrorCode getErrorCode() const;
-};
+#include "OutputInterface/include/OutputInterface.hpp"
+#include "LoggerMessage.hpp"
 
 class Logger 
 {
     private:
+        const size_t saveLogBarier = 20;
+        const std::string pathToSaveLog {"../../../log/"};
+
+        std::optional<std::string> nameLogFile;
         
-        const UserOutput* outputInterface;
+        const OutputInterface* outputInterface;
 
         std::vector<LoggerMessage> Log;
-        std::vector<LoggerMessage>::iterator unprocessedIterator;
+        size_t unprocessed;
 
         void onMessage();
 
         /* Save and clear Log */
-        std::error_code saveLogToFile() const; 
+        std::error_code saveLogToFile(); 
 
     public:
         Logger();
+        Logger(const OutputInterface* ob);
 
-        void setOutputInterface(const UserOutput* ob);
+        void setOutputInterface(const OutputInterface* ob);
         bool hasOutputInterface() const;
 
         std::error_code log(LoggerMessage::View msgv, ErrorCode ec);
+        std::error_code log(LoggerMessage::View msgv, std::error_code ec);
 };

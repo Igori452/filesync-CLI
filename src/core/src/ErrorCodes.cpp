@@ -42,7 +42,9 @@ std::string LoggerCategory::message(int cd) const
 {
     switch (cd)
     {
+        case 100: return "Error creating the file for automatic log saving";
         case 300: return "Logger successfuly initialisation";
+        case 301: return "Log successfully saved to file.";
     }
     return "Unknown";
 }

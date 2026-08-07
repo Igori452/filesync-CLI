@@ -14,5 +14,9 @@ if (BUILD_TESTS)
 endif()
 
 add_subdirectory(src/core)
+
 add_subdirectory(src/CommandLineParser)
+add_subdirectory(src/OutputInterface)
+add_subdirectory(src/Logger)
+
 #add_subdirectory(src/Scanner)

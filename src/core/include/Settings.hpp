@@ -9,7 +9,7 @@ class Settings
         bool recursive_ = false;
 
     public:
-        Settings() = delete;
+        Settings() = default;
         Settings(const std::vector<Options>& opt);
 
         bool verbose() const;

@@ -64,11 +64,13 @@ enum class ModuleSettingsError : int
 enum class LoggerError : int
 {
     /* ERRORS */
+    FILE_CREATION_ERROR = 100,
 
     /* WARNINGS */
 
     /* SUCCESSFUL */
     LOGGER_INIT_SUCCESSFUL = 300,
+    SUCCESSFUL_SAVE_LOG = 301,
     
 };
 

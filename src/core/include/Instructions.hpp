@@ -157,7 +157,7 @@ const std::map<Commands, CommandInfo> commandRegistry
         "Display the current version of the program"}},
 };
 
-/* COMMAND MODEL DATA (USE CLI AND APPLICATION) */
+/* INPUT COMMAND MODEL DATA */
 struct InputCommand
 {
 
