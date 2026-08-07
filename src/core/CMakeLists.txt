@@ -1,27 +1,21 @@
-cmake_minimum_required(VERSION 3.10)
-
 project(CoreUtility)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
-
-include_directories("${PROJECT_SOURCE_DIR}/include")
 
 file(GLOB CPPS "src/*.cpp")
 
 add_library(${PROJECT_NAME} ${CPPS})
 
-################# TESTS #################
-#[[ 
+target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+set(BUILD_TESTS OFF)
+
 if (BUILD_TESTS)
-    file(GLOB TESTS "../../tests/core/*.cpp" 
-                    "../../tests/main.cpp")
-
-    add_executable(${PROJECT_NAME}_tests ${TESTS})
-
-    target_link_libraries(${PROJECT_NAME}_tests
-        ${PROJECT_NAME}
-        gtest
-    )
+    file(GLOB TESTS "../../tests/${MODULE_NAME}/*.cpp" "../../tests/main.cpp")
+    
+    if(TESTS)
+        add_executable(${PROJECT_NAME}_tests ${TESTS})
+        target_link_libraries(${PROJECT_NAME}_tests
+            ${PROJECT_NAME}
+            gtest
+        )
+    endif()
 endif()
-]]
