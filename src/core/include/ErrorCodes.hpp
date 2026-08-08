@@ -49,15 +49,18 @@ enum class CommandLineParserError : int
     
 };
 
-enum class ModuleSettingsError : int
+enum class SettingsError : int
 {
     /* ERRORS */
+    UNKNOWN_CONFIGURATION_PARAMETER = 100,
+    INVALID_CONFIGURATION_VALUE = 101,
 
     /* WARNINGS */
     DEAFAULT_EXTRACT = 200,
 
     /* SUCCESSFUL */
     EXTRACT_SUCCESSFUL = 300,
+    PARAMETER_SUCCESSFULLY_EXTRACTED = 301,
     
 };
 
@@ -80,7 +83,7 @@ namespace std
     struct is_error_code_enum<CommandLineParserError> : true_type {};
 
     template<>
-    struct is_error_code_enum<ModuleSettingsError> : true_type {};
+    struct is_error_code_enum<SettingsError> : true_type {};
 
     template<>
     struct is_error_code_enum<LoggerError> : true_type {};
@@ -93,7 +96,7 @@ class CommandLineParserCategory : public std::error_category
         std::string message(int cd) const override;
 };
 
-class ModuleSettingsCategory : public std::error_category 
+class SettingsCategory : public std::error_category 
 {
     public:
         const char* name() const noexcept override;
@@ -119,9 +122,9 @@ inline std::error_code make_error_code(CommandLineParserError code)
     return std::error_code(static_cast<int>(code), get_category<CommandLineParserCategory>());
 }
 
-inline std::error_code make_error_code(ModuleSettingsError code) 
+inline std::error_code make_error_code(SettingsError code) 
 {
-    return std::error_code(static_cast<int>(code), get_category<ModuleSettingsCategory>());
+    return std::error_code(static_cast<int>(code), get_category<SettingsCategory>());
 }
 
 inline std::error_code make_error_code(LoggerError code) 

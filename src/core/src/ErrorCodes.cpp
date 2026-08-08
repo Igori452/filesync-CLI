@@ -18,17 +18,17 @@ std::string CommandLineParserCategory::message(int cd) const
     return "Unknown";
 }
 
-const char* ModuleSettingsCategory::name() const noexcept 
+const char* SettingsCategory::name() const noexcept 
 {
     return "ModuleSettings";
 }
 
-std::string ModuleSettingsCategory::message(int cd) const 
+std::string SettingsCategory::message(int cd) const 
 {
     switch (cd)
     {
-        case 200: return "Settings successfully applied";
-        case 300: return "No flags were used, so default values ​​are being used for the operation";
+        case 200: return "Failed to open config.txt; using default system settings.";
+        case 300: return "Config extracted successfully";
     }
     return "Unknown";
 }

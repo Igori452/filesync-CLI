@@ -78,7 +78,7 @@ TEST(Logger, LogWarningErrorCode)
 
     Logger lg {&out};
 
-    lg.log(LoggerMessage::View::USER, ModuleSettingsError::DEAFAULT_EXTRACT);
+    lg.log(LoggerMessage::View::USER, SettingsError::DEAFAULT_EXTRACT);
     const LoggerMessage* lgmsg = out.getOut();
     ErrorCode err = lgmsg->getErrorCode();
 
@@ -86,7 +86,7 @@ TEST(Logger, LogWarningErrorCode)
     EXPECT_EQ(lgmsg->getView(), LoggerMessage::View::USER);
     EXPECT_FALSE(err.getErrorCode().message().empty());
 
-    lg.log(LoggerMessage::View::SYSTEM, ModuleSettingsError::DEAFAULT_EXTRACT);
+    lg.log(LoggerMessage::View::SYSTEM, SettingsError::DEAFAULT_EXTRACT);
     lgmsg = out.getOut();
     err = lgmsg->getErrorCode();
 
@@ -110,7 +110,7 @@ TEST(Logger, LogErrorErrorCode)
     EXPECT_EQ(lgmsg->getView(), LoggerMessage::View::USER);
     EXPECT_FALSE(err.getErrorCode().message().empty());
 
-    lg.log(LoggerMessage::View::SYSTEM, ModuleSettingsError::DEAFAULT_EXTRACT);
+    lg.log(LoggerMessage::View::SYSTEM, SettingsError::DEAFAULT_EXTRACT);
     lgmsg = out.getOut();
     err = lgmsg->getErrorCode();
 
@@ -150,7 +150,7 @@ TEST(Logger, LogMessageUserWithConsoleOutputInterfaceWithDefaultSettings)
     EXPECT_FALSE(ostr.str().empty());
     ostr.str("");
 
-    lg.log(LoggerMessage::View::USER, ModuleSettingsError::DEAFAULT_EXTRACT);
+    lg.log(LoggerMessage::View::USER, SettingsError::DEAFAULT_EXTRACT);
     EXPECT_FALSE(ostr.str().empty());
     ostr.str("");
 
@@ -162,7 +162,7 @@ TEST(Logger, LogMessageUserWithConsoleOutputInterfaceWithDefaultSettings)
     EXPECT_TRUE(ostr.str().empty());
     ostr.str("");
 
-    lg.log(LoggerMessage::View::SYSTEM, ModuleSettingsError::DEAFAULT_EXTRACT);
+    lg.log(LoggerMessage::View::SYSTEM, SettingsError::DEAFAULT_EXTRACT);
     EXPECT_TRUE(ostr.str().empty());
     ostr.str("");
 
@@ -186,7 +186,7 @@ TEST(Logger, LogMessageUserWithConsoleOutputInterfaceWithCustomSettings)
     EXPECT_FALSE(ostr.str().empty());
     ostr.str("");
 
-    lg.log(LoggerMessage::View::USER, ModuleSettingsError::DEAFAULT_EXTRACT);
+    lg.log(LoggerMessage::View::USER, SettingsError::DEAFAULT_EXTRACT);
     EXPECT_FALSE(ostr.str().empty());
     ostr.str("");
 
@@ -198,7 +198,7 @@ TEST(Logger, LogMessageUserWithConsoleOutputInterfaceWithCustomSettings)
     EXPECT_FALSE(ostr.str().empty());
     ostr.str("");
 
-    lg.log(LoggerMessage::View::SYSTEM, ModuleSettingsError::DEAFAULT_EXTRACT);
+    lg.log(LoggerMessage::View::SYSTEM, SettingsError::DEAFAULT_EXTRACT);
     EXPECT_FALSE(ostr.str().empty());
     ostr.str("");
 
