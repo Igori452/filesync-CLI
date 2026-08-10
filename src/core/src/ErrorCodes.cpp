@@ -27,8 +27,12 @@ std::string SettingsCategory::message(int cd) const
 {
     switch (cd)
     {
-        case 200: return "Failed to open config.txt; using default system settings.";
+        case 100: return "Unknown parameter in the configuration file";
+        case 101: return "Incorrect configuration parameter type";
+        case 200: return "Failed to open config.txt; using default system settings";
+        case 201: return "Unknown data in the configuration file; some lines were ignored";
         case 300: return "Config extracted successfully";
+        case 301: return "Parameter and value successfully extracted.";
     }
     return "Unknown";
 }
@@ -44,7 +48,7 @@ std::string LoggerCategory::message(int cd) const
     {
         case 100: return "Error creating the file for automatic log saving";
         case 300: return "Logger successfuly initialisation";
-        case 301: return "Log successfully saved to file.";
+        case 301: return "Log successfully saved to file";
     }
     return "Unknown";
 }
