@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "Core/include/Settings.hpp"
+#include "Core/include/Settings/Settings.hpp"
 #include "Logger/include/LoggerMessage.hpp"
 
 enum class UserInterface {CONSOLE /*,UI, WEB*/};

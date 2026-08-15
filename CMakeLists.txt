@@ -14,7 +14,7 @@ endif()
 
 include(CMakeModules.cmake)
 
-add_subdirectory(src/core)
+add_subdirectory(src/Core)
 
 add_subdirectory(src/CommandLineParser)
 add_subdirectory(src/OutputInterface)

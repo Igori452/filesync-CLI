@@ -5,7 +5,7 @@
 
 void ConfigData::addConfigLine(std::string key, std::string value) 
 {
-    configLines.emplace_back(key, value);
+    configLines.emplace_back(std::move(key), std::move(value));
 }
 
 std::vector<ConfigData::ConfigLineData> ConfigData::getConfigLines() const 
@@ -77,9 +77,23 @@ std::optional<ConfigData> ParsingConfigFromTxt::parse(const IDataSource& pd) con
     ConfigData cfgd;
 
     std::string key {}, val {};
-    while (std::getline(is >> std::ws, key, ':') && std::getline (is >> std::ws, val))
+
+    const std::string rmSyms {" \t\n"};
+    auto filterStr = [&rmSyms](const std::string str) -> std::string { 
+        size_t indStart = str.find_first_not_of(rmSyms);
+
+        if (indStart == std::string::npos)
+        {
+            return "";
+        }
+        
+        size_t indEnd = str.find_last_not_of(rmSyms);
+        return str.substr(indStart, (indEnd - indStart + 1));
+    };
+
+    while (std::getline(is, key, ':') && std::getline (is, val))
     {
-        cfgd.addConfigLine(key, val);
+        cfgd.addConfigLine(filterStr(key), filterStr(val));
     }
 
     return cfgd;

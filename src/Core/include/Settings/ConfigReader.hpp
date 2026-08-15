@@ -8,6 +8,8 @@
 
 #include <memory>
 
+#include <fstream>
+
 class ConfigData {
     public:
         using ConfigLineData = std::pair<std::string, std::string>; 

@@ -1,4 +1,4 @@
-#include "include/Settings/Settings.hpp"
+#include "Settings/Settings.hpp"
 
 #include <fstream>
 

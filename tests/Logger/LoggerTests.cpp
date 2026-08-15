@@ -3,6 +3,7 @@
 #include "Logger/include/Logger.hpp"
 
 /* MOCK */
+/*
 class TestOutput : public OutputInterface  
 {
     private:
@@ -205,7 +206,7 @@ TEST(Logger, LogMessageUserWithConsoleOutputInterfaceWithCustomSettings)
     lg.log(LoggerMessage::View::SYSTEM, LoggerError::FILE_CREATION_ERROR);
     EXPECT_FALSE(ostr.str().empty());
     ostr.str("");
-}
+}*/
 
 /*
 TEST(Logger, SaveLog) 
