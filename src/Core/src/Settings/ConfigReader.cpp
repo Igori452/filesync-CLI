@@ -8,9 +8,14 @@ void ConfigData::addConfigLine(std::string key, std::string value)
     configLines.emplace_back(std::move(key), std::move(value));
 }
 
-std::vector<ConfigData::ConfigLineData> ConfigData::getConfigLines() const 
+std::vector<ConfigData::ConfigLineData> ConfigData::getConfigLines() const &
 {
     return configLines;
+}
+
+std::vector<ConfigData::ConfigLineData> ConfigData::getConfigLines() && 
+{
+    return std::move(configLines);
 }
 
 ConfigManager::ConfigManager(std::unique_ptr<ParsingStrategy> ps) 
@@ -20,32 +25,37 @@ std::unique_ptr<ConfigData> ConfigManager::releaseConfigData()
 {
     if (!cfg) 
     {
-        return {};
+        return std::make_unique<ConfigData>();
     } 
 
     return std::move(cfg);
 }
 
-std::error_code ConfigManager::parseCfgFromFile(std::string pathToConfig) 
+std::error_code ConfigManager::parseCfgFrom(const IDataSource& ids) 
 {
     if (!cfg)
     {
         return make_error_code(SettingsError::BAD_CONFIG_MANAGER_OPERATION);
     }
 
-    auto parseResult = parsingStrategy->parse(FileDescriptor {std::move(pathToConfig)});
+    auto parseResult = parsingStrategy->parse(ids);
 
     if (!parseResult)
     {
-        return make_error_code(SettingsError::INVALID_CONFIG_FILE);
+        return make_error_code(SettingsError::EXTRACT_ERROR);
     }
 
-    *cfg = *parseResult;
+    cfg = std::make_unique<ConfigData>(std::move(*parseResult));
     return make_error_code(SettingsError::EXTRACT_SUCCESSFUL);
 }
 
+std::error_code ConfigManager::parseCfgFromFile(std::string pathToConfig) 
+{
+    return parseCfgFrom(FileDescriptor {std::move(pathToConfig)});
+}
+
 FileDescriptor::FileDescriptor(std::string ptf) 
-    : pathToFile(std::move(ptf)), file(ptf) {}
+    : pathToFile(std::move(ptf)), file(pathToFile) {}
 
 std::optional<std::reference_wrapper<std::istream>> FileDescriptor::getStream() const
 {
@@ -62,9 +72,9 @@ FileDescriptor::~FileDescriptor()
     file.close();
 }
 
-std::optional<ConfigData> ParsingConfigFromTxt::parse(const IDataSource& pd) const 
+std::optional<ConfigData> ParsingConfigFromTxt::parse(const IDataSource& ids) const 
 {   
-    auto wrappedFile {pd.getStream()};
+    auto wrappedFile {ids.getStream()};
 
     if (!wrappedFile)
     {
@@ -73,13 +83,11 @@ std::optional<ConfigData> ParsingConfigFromTxt::parse(const IDataSource& pd) con
 
     std::istream& is = wrappedFile->get();
 
-    ConfigData::ConfigLineData cfgl;
     ConfigData cfgd;
-
     std::string key {}, val {};
 
     const std::string rmSyms {" \t\n"};
-    auto filterStr = [&rmSyms](const std::string str) -> std::string { 
+    auto filterStr = [&rmSyms](const std::string& str) -> std::string { 
         size_t indStart = str.find_first_not_of(rmSyms);
 
         if (indStart == std::string::npos)

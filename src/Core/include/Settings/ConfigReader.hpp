@@ -10,38 +10,6 @@
 
 #include <fstream>
 
-class ConfigData {
-    public:
-        using ConfigLineData = std::pair<std::string, std::string>; 
-    
-    private:
-        std::vector<ConfigLineData> configLines;
-
-    public:
-        ConfigData() = default;
-
-        void addConfigLine(std::string key, std::string value);
-        std::vector<ConfigLineData> getConfigLines() const;  
-};
-
-class ParsingStrategy;
-
-class ConfigManager
-{
-    private:
-        std::unique_ptr<ConfigData> cfg;
-        std::unique_ptr<ParsingStrategy> parsingStrategy;
-        
-    public:
-        ConfigManager() = delete;
-
-        ConfigManager(std::unique_ptr<ParsingStrategy> ps);
-
-        std::error_code parseCfgFromFile(std::string pathToConfig);
-
-        std::unique_ptr<ConfigData> releaseConfigData();
-};
-
 class IDataSource {
     public:
         virtual std::optional<std::reference_wrapper<std::istream>> getStream() const = 0;
@@ -69,10 +37,32 @@ class FileDescriptor : public IDataSource {
         ~FileDescriptor();
 };
 
+class ConfigData {
+    public:
+        using ConfigLineData = std::pair<std::string, std::string>; 
+
+    private:
+        std::vector<ConfigLineData> configLines;
+
+    public:
+        ConfigData() = default;
+
+        ConfigData(ConfigData&& cfgd) noexcept = default;
+        ConfigData& operator=(ConfigData&& cfgd) noexcept = default;
+
+        ConfigData(const ConfigData& cfgd) = default;
+        ConfigData& operator=(const ConfigData& cfgd) = default;
+
+        void addConfigLine(std::string key, std::string value);
+
+        std::vector<ConfigLineData> getConfigLines() const &; /* USE LVALUE OBJECTS */
+        std::vector<ConfigLineData> getConfigLines() &&; /* USE RVALUE OBJECTS */
+};
+
 class ParsingStrategy 
 {
     public:
-        virtual std::optional<ConfigData> parse(const IDataSource& pd) const = 0;
+        virtual std::optional<ConfigData> parse(const IDataSource& ids) const = 0;
         virtual ~ParsingStrategy() = default;
 };
 
@@ -82,4 +72,21 @@ class ParsingConfigFromTxt : public ParsingStrategy
         ParsingConfigFromTxt() = default;
 
         std::optional<ConfigData> parse(const IDataSource& pd) const override;
+};
+
+class ConfigManager
+{
+    private:
+        std::unique_ptr<ConfigData> cfg;
+        std::unique_ptr<ParsingStrategy> parsingStrategy;
+        
+    public:
+        ConfigManager() = delete;
+
+        ConfigManager(std::unique_ptr<ParsingStrategy> ps);
+
+        std::error_code parseCfgFrom(const IDataSource& ids);
+        std::error_code parseCfgFromFile(std::string pathToConfig);
+
+        std::unique_ptr<ConfigData> releaseConfigData();
 };
