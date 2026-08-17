@@ -1,6 +1,9 @@
 #include <gtest/gtest.h>
 
 #include "Settings/ConfigReader.hpp"
+#include "Settings/Settings.hpp"
+
+#include <tuple>
 
 /* MOCK */
 class StreamStringDescriptor : public IDataSource 
@@ -131,4 +134,62 @@ TEST(ConfigManager, ParsingFromFileWithHelpOfConfigManager)
     std::vector<ConfigData::ConfigLineData> cfgdEmpty = cfgManager.releaseConfigData()->getConfigLines();
 
     EXPECT_TRUE(cfgdEmpty.empty());
+}
+
+TEST(SettingsManagerStuff, ParseConfigValueTest) 
+{
+    using TestDataTuple = std::tuple<std::vector<std::string>, std::vector<bool>, std::vector<int>, std::vector<size_t>>;
+
+    std::vector<std::vector<std::string>> testValues = {
+        {"string"}, 
+        {"false", "0", "true", "1"},
+        {"-1", "-100", "0", "200", "+5"},
+        {"0", "1", "1000000"}
+    };
+
+    TestDataTuple testKeys {};
+
+    TestDataTuple correctValues 
+    {
+        {"string"},
+        {false, false, true, true},
+        {-1, -100, 0, 200, 5},
+        {0, 1, 1000000},
+    };
+
+    auto unpackTestKeys {[&testValues]<typename... Args>(Args&... args) {
+        size_t index {0};
+
+        ([&](){
+            for (const std::string& testVal : testValues[index]) 
+            {
+                using VectorType = std::decay_t<decltype(args)>;
+                using TargetType = typename VectorType::value_type;
+                auto res {SettingsManagerStuff::parseConfigValue<TargetType>(testVal)};
+        
+                if (res) 
+                {
+                    args.emplace_back(*res);
+                }
+            }
+            ++index;
+        }(), ...);
+    }};
+
+    std::apply(unpackTestKeys, testKeys);
+
+    auto compareTuples {[]<typename... Args1>(const Args1&... args1){
+        return [&args1...]<typename... Args2>(const Args2&... args2){
+            ([&](const auto& vec1, const auto& vec2){
+                EXPECT_EQ(vec1.size(), vec2.size());
+
+                for (size_t i = 0; i < vec1.size(); ++i) 
+                {
+                    EXPECT_EQ(vec1[i], vec2[i]);
+                }
+            }(args1, args2), ...);
+        };
+    }};
+    
+    std::apply(std::apply(compareTuples, std::move(correctValues)), std::move(testKeys));
 }

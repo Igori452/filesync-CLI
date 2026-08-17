@@ -45,11 +45,8 @@ class SettingsManager
     private:
         std::unique_ptr<Settings> st;
 
-        template <typename T>
-        std::optional<T> parseConfigValue(std::string v);
-
     public:
-        SettingsManager() = default;
+        SettingsManager();
 
         std::error_code setFromConfig(const ConfigData& cfgd);
         std::error_code setFromOptions(const std::vector<Options>& optd);
@@ -57,9 +54,11 @@ class SettingsManager
         std::unique_ptr<Settings> releaseSettings();
 };
 
+namespace SettingsManagerStuff 
+{
 
 template <typename T>
-std::optional<T> SettingsManager::parseConfigValue(std::string v) 
+std::optional<T> parseConfigValue(std::string v) 
 {
     if constexpr (std::same_as<T, std::string>) 
     {
@@ -76,8 +75,14 @@ std::optional<T> SettingsManager::parseConfigValue(std::string v)
     }
     else if constexpr (std::integral<T>) 
     {
+        std::string_view sw {v};
+        if (!sw.empty() && sw[0] == '+') 
+        {
+            sw.remove_prefix(1);
+        }
+
         T convert {0};
-        auto [ptr, ec] = std::from_chars(v.data(), v.data() + v.size(), convert);
+        auto [ptr, ec] = std::from_chars(sw.data(), sw.data() + sw.size(), convert);
         if (ec == std::errc{})
         {
             return convert;
@@ -86,3 +91,5 @@ std::optional<T> SettingsManager::parseConfigValue(std::string v)
     }
     return std::nullopt;
 }
+
+} /* namespace SettingsManagerStuff */

@@ -4,6 +4,8 @@
 
 #include <set>
 
+SettingsManager::SettingsManager() : st(std::unique_ptr<Settings>(new Settings())) {}
+
 std::error_code SettingsManager::setFromConfig(const ConfigData& cfgd) 
 {
     if (!st) 
@@ -13,17 +15,15 @@ std::error_code SettingsManager::setFromConfig(const ConfigData& cfgd)
 
     auto configData = cfgd.getConfigLines(); 
 
-    bool visit {false};
-    auto setSpecialParametr = [this, &visit]<typename T>(T& key, std::string value)
+    auto setSpecialParametr = [this]<typename T>(T& key, const std::string& value)
     {
-        visit = true;
-        auto b = parseConfigValue<T>(value);
+        auto b {SettingsManagerStuff::parseConfigValue<T>(std::move(value))};
         if (b) 
         {
             key = *b;
-            return false;
+            return true;
         }
-        return true;
+        return false;
     };
 
     for (auto it = std::begin(configData); it != std::end(configData); ++it) {
@@ -31,13 +31,33 @@ std::error_code SettingsManager::setFromConfig(const ConfigData& cfgd)
             return tolower(sym);
         });
 
-        if (it->first == "verbose" && setSpecialParametr(st->verbose_, it->second))                     return make_error_code(SettingsError::INVALID_CONFIGURATION_VALUE);
-        else if (it->first == "recursive" && setSpecialParametr(st->recursive_, it->second))            return make_error_code(SettingsError::INVALID_CONFIGURATION_VALUE);
-        else if (it->first == "pathtosavelog" && setSpecialParametr(st->pathToSaveLog_, it->second))    return make_error_code(SettingsError::INVALID_CONFIGURATION_VALUE);
-        else if (it->first == "savelogbarier" && setSpecialParametr(st->saveLogBarier_, it->second))    return make_error_code(SettingsError::INVALID_CONFIGURATION_VALUE);
+        bool parse_failed = false;
+
+        if (it->first == "verbose") 
+        {
+            parse_failed = setSpecialParametr(st->verbose_, it->second);
+        } 
+        else if (it->first == "recursive") 
+        {
+            parse_failed = setSpecialParametr(st->recursive_, it->second);
+        } 
+        else if (it->first == "pathtosavelog") 
+        {
+            parse_failed = setSpecialParametr(st->pathToSaveLog_, it->second);
+        } 
+        else if (it->first == "savelogbarier") 
+        {
+            parse_failed = setSpecialParametr(st->saveLogBarier_, it->second);
+        } 
+        else 
+        {
+            return make_error_code(SettingsError::UNKNOWN_CONFIGURATION_PARAMETER);
+        }                  
         
-        if (!visit) return make_error_code(SettingsError::UNKNOWN_CONFIGURATION_PARAMETER);
-        visit = false;
+        if (!parse_failed) 
+        {
+            return make_error_code(SettingsError::INVALID_CONFIGURATION_VALUE);
+        }
     }
 
     return make_error_code(SettingsError::PARAMETER_SUCCESSFULLY_EXTRACTED);
@@ -72,7 +92,7 @@ std::unique_ptr<Settings> SettingsManager::releaseSettings()
 {
     if (!st) 
     {
-        return {};
+        return std::unique_ptr<Settings>(new Settings());
     }    
 
     return std::move(st);
