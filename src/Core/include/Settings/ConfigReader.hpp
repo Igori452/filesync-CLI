@@ -55,8 +55,7 @@ class ConfigData {
 
         void addConfigLine(std::string key, std::string value);
 
-        std::vector<ConfigLineData> getConfigLines() const &; /* USE LVALUE OBJECTS */
-        std::vector<ConfigLineData> getConfigLines() &&; /* USE RVALUE OBJECTS */
+        const std::vector<ConfigLineData>& getConfigLines() const;
 };
 
 class ParsingStrategy 

@@ -1,84 +1,68 @@
 #include "Settings/Settings.hpp"
 
-#include <fstream>
+#include <utility>
 
-#include <set>
-
-SettingsManager::SettingsManager() : st(std::unique_ptr<Settings>(new Settings())) {}
+Settings::Settings(SettingsStuff::SettingsData stData) : settingsData(std::move(stData)) {}
 
 std::error_code SettingsManager::setFromConfig(const ConfigData& cfgd) 
 {
-    if (!st) 
+    auto setSpecialParametr {[]<typename T>(T& key, std::string_view value)
     {
-        return make_error_code(SettingsError::BAD_SETTINGS_MANAGER_OPERATION);
-    }
-
-    auto configData = cfgd.getConfigLines(); 
-
-    auto setSpecialParametr = [this]<typename T>(T& key, const std::string& value)
-    {
-        auto b {SettingsManagerStuff::parseConfigValue<T>(std::move(value))};
+        auto b {SettingsStuff::parseConfigValue<T>(value)};
         if (b) 
         {
             key = *b;
             return true;
         }
         return false;
-    };
+    }};
+
+    const auto& configData = cfgd.getConfigLines(); 
 
     for (auto it = std::begin(configData); it != std::end(configData); ++it) {
-        std::transform(std::begin(it->first), std::end(it->first), std::begin(it->first), [](unsigned char sym){
-            return tolower(sym);
-        });
+        bool parse_success = false;
 
-        bool parse_failed = false;
-
-        if (it->first == "verbose") 
+        if (SettingsStuff::comapareStrings(it->first, "verbose")) 
         {
-            parse_failed = setSpecialParametr(st->verbose_, it->second);
+            parse_success = setSpecialParametr(settingsData.verbose, it->second);
         } 
-        else if (it->first == "recursive") 
+        else if (SettingsStuff::comapareStrings(it->first, "recursive")) 
         {
-            parse_failed = setSpecialParametr(st->recursive_, it->second);
+            parse_success = setSpecialParametr(settingsData.recursive, it->second);
         } 
-        else if (it->first == "pathtosavelog") 
+        else if (SettingsStuff::comapareStrings(it->first, "pathtosavelog")) 
         {
-            parse_failed = setSpecialParametr(st->pathToSaveLog_, it->second);
+            parse_success = setSpecialParametr(settingsData.pathToSaveLog, it->second);
         } 
-        else if (it->first == "savelogbarier") 
+        else if (SettingsStuff::comapareStrings(it->first, "savelogbarier")) 
         {
-            parse_failed = setSpecialParametr(st->saveLogBarier_, it->second);
+            parse_success = setSpecialParametr(settingsData.saveLogBarier, it->second);
         } 
         else 
         {
             return make_error_code(SettingsError::UNKNOWN_CONFIGURATION_PARAMETER);
         }                  
         
-        if (!parse_failed) 
+        if (!parse_success) 
         {
             return make_error_code(SettingsError::INVALID_CONFIGURATION_VALUE);
         }
     }
 
-    return make_error_code(SettingsError::PARAMETER_SUCCESSFULLY_EXTRACTED);
+    return make_error_code(SettingsError::CONFIG_SUCCESSFULLY_EXTRACTED);
 }
 
 std::error_code SettingsManager::setFromOptions(const std::vector<Options>& optd) 
 {
-    if (!st) 
-    {
-        return make_error_code(SettingsError::BAD_SETTINGS_MANAGER_OPERATION);
-    }
-
     for (const auto& opt : optd) 
     {
         switch (opt)
         {
             case Options::VERBOSE:
-                st->verbose_ = true;
+                settingsData.verbose = true;
                 break;
             case Options::RECURSIVE:
-                st->recursive_ = true;
+                settingsData.recursive = true;
                 break;
             default:
                 return make_error_code(SettingsError::UNKNOWN_OPTION);
@@ -88,32 +72,27 @@ std::error_code SettingsManager::setFromOptions(const std::vector<Options>& optd
     return make_error_code(SettingsError::OPTIONS_SUCCESSFULLY_EXTRACTED);
 }
 
-std::unique_ptr<Settings> SettingsManager::releaseSettings() 
+Settings SettingsManager::releaseSettings() 
 {
-    if (!st) 
-    {
-        return std::unique_ptr<Settings>(new Settings());
-    }    
-
-    return std::move(st);
+    return Settings(std::exchange(settingsData, SettingsStuff::SettingsData {}));
 }
 
 bool Settings::verbose() const 
 {
-    return verbose_;
+    return settingsData.verbose;
 }
 
 bool Settings::recursive() const 
 {
-    return recursive_;
+    return settingsData.recursive;
 }
 
 const std::string& Settings::pathToSaveLog() const
 {
-    return pathToSaveLog_;
+    return settingsData.pathToSaveLog;
 }
 
 size_t Settings::saveLogBarier() const
 {
-    return saveLogBarier_;
+    return settingsData.saveLogBarier;
 }

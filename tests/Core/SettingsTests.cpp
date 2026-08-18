@@ -5,6 +5,9 @@
 
 #include <tuple>
 
+namespace SettingsTestContext 
+{
+
 /* MOCK */
 class StreamStringDescriptor : public IDataSource 
 {
@@ -29,18 +32,28 @@ std::optional<std::reference_wrapper<std::istream>> StreamStringDescriptor::getS
     return iss;
 }
 
+bool CompareSettings(const SettingsStuff::SettingsData& settingsData, const Settings& settings) 
+{
+    return (    settingsData.verbose == settings.verbose() 
+            &&  settingsData.recursive == settings.recursive()
+            &&  settingsData.pathToSaveLog == settings.pathToSaveLog()
+            && settingsData.saveLogBarier == settings.saveLogBarier() );
+}
+
+}
+
 TEST(Parsing, CheckParsingFromStream) 
 {
     std::vector<ConfigData::ConfigLineData> data 
     {
         {"key1", "val1"},
         {"key2", "val2"},
-        {"key3", "val3"},
+        {"key3", "val3:://https"},
         {"key4", "val4"},
     };
 
     ConfigData cfgd {};
-    StreamStringDescriptor ssd {};
+    SettingsTestContext::StreamStringDescriptor ssd {};
 
     for (auto it = std::begin(data); it != std::end(data); ++it)
     {
@@ -53,13 +66,38 @@ TEST(Parsing, CheckParsingFromStream)
 
     ASSERT_TRUE(parseRes.has_value());
 
-    std::vector<ConfigData::ConfigLineData> parseCfgd = parseRes.value().getConfigLines();
+    std::vector<ConfigData::ConfigLineData> parseCfgd = parseRes->getConfigLines();
 
     for (auto it1 = std::begin(parseCfgd), it2 = std::begin(data); it1 != std::end(parseCfgd) && it2 != std::end(data); ++it1, ++it2) 
     {
         EXPECT_EQ(it1->first, it2->first);
         EXPECT_EQ(it1->second, it2->second);
     }
+}
+
+TEST(Parsing, CheckParsingInvalidDataFromStream) 
+{
+    std::vector<ConfigData::ConfigLineData> data 
+    {
+        {"key1", "val1"},
+        {"key2", "val2"},
+    };
+
+    ConfigData cfgd {};
+    SettingsTestContext::StreamStringDescriptor ssd {};
+
+    for (auto it = std::begin(data); it != std::end(data); ++it)
+    {
+        cfgd.addConfigLine(it->first, it->second);
+        ssd.setData(it->first + " " + it->second + "\n");
+    }
+
+    ParsingConfigFromTxt parsingTxt {};
+    auto parseRes = parsingTxt.parse(ssd);
+
+    std::vector<ConfigData::ConfigLineData> parseCfgd = parseRes->getConfigLines();
+
+    EXPECT_TRUE(parseCfgd.empty());
 }
 
 TEST(Parsing, CheckParsingFromStreamWithTabs) 
@@ -73,7 +111,7 @@ TEST(Parsing, CheckParsingFromStreamWithTabs)
     };
 
     ConfigData cfgd {};
-    StreamStringDescriptor ssd {};
+    SettingsTestContext::StreamStringDescriptor ssd {};
 
     for (auto it = std::begin(data); it != std::end(data); ++it)
     {
@@ -86,7 +124,7 @@ TEST(Parsing, CheckParsingFromStreamWithTabs)
 
     ASSERT_TRUE(parseRes.has_value());
 
-    std::vector<ConfigData::ConfigLineData> parseCfgd = parseRes.value().getConfigLines();
+    std::vector<ConfigData::ConfigLineData> parseCfgd = parseRes->getConfigLines();
 
     for (auto it1 = std::begin(parseCfgd), it2 = std::begin(data); it1 != std::end(parseCfgd) && it2 != std::end(data); ++it1, ++it2) 
     {
@@ -105,7 +143,7 @@ TEST(ConfigManager, ParsingFromFileWithHelpOfConfigManager)
         {"key4", "val4"},
     };
 
-    StreamStringDescriptor ssd {};
+    SettingsTestContext::StreamStringDescriptor ssd {};
     for (auto it = std::begin(data); it != std::end(data); ++it)
     {
         ssd.setData("\t    " + it->first + "               \t\n\n:\t" + it->second + "\t       \t \n\n\n");
@@ -165,7 +203,7 @@ TEST(SettingsManagerStuff, ParseConfigValueTest)
             {
                 using VectorType = std::decay_t<decltype(args)>;
                 using TargetType = typename VectorType::value_type;
-                auto res {SettingsManagerStuff::parseConfigValue<TargetType>(testVal)};
+                auto res {SettingsStuff::parseConfigValue<TargetType>(testVal)};
         
                 if (res) 
                 {
@@ -192,4 +230,124 @@ TEST(SettingsManagerStuff, ParseConfigValueTest)
     }};
     
     std::apply(std::apply(compareTuples, std::move(correctValues)), std::move(testKeys));
+}
+
+TEST(SettingsManager, BuildDefaultSettingsWithHelpOfSettingsManager) 
+{
+    SettingsManager stManager {};
+    Settings st {stManager.releaseSettings()};
+
+    EXPECT_TRUE(SettingsTestContext::CompareSettings(SettingsStuff::SettingsData {}, st)); 
+}
+
+TEST(SettingsManager, BuildCustomtSettingsFromConfigWithHelpOfSettingsManager) 
+{
+    SettingsManager stManager {};
+
+    SettingsStuff::SettingsData settingsData {};
+    settingsData.verbose = true;
+    settingsData.recursive = true;
+    settingsData.pathToSaveLog = "../../../cache/";
+    settingsData.saveLogBarier = 50;
+
+    ConfigData cfgd {};
+    cfgd.addConfigLine("verbose", "1");
+    cfgd.addConfigLine("RECURSIVE", "true");
+    cfgd.addConfigLine("PathToSaveLog", "../../../cache/");
+    cfgd.addConfigLine("SaveLogBarier", "50");
+
+    ErrorCode err {stManager.setFromConfig(cfgd)};
+
+    EXPECT_EQ(err.getStatus(), ErrorStatus::SUCCESSFUL);
+    EXPECT_EQ(err.getErrorCode().value(), static_cast<int>(SettingsError::CONFIG_SUCCESSFULLY_EXTRACTED));
+
+    Settings st {stManager.releaseSettings()};
+
+    EXPECT_TRUE(SettingsTestContext::CompareSettings(settingsData, st)); 
+
+    Settings stDefault {stManager.releaseSettings()};
+
+    EXPECT_TRUE(SettingsTestContext::CompareSettings(SettingsStuff::SettingsData {}, stDefault)); 
+}
+
+TEST(SettingsManager, BuildCustomtSettingsFromConfigAndOptionsWithHelpOfSettingsManager) 
+{
+    SettingsManager stManager {};
+
+    SettingsStuff::SettingsData settingsData {};
+    settingsData.verbose = true;
+    settingsData.recursive = true;
+
+    std::vector<Options> opts {Options::RECURSIVE, Options::VERBOSE};
+
+    ErrorCode err {stManager.setFromOptions(opts)};
+
+    EXPECT_EQ(err.getStatus(), ErrorStatus::SUCCESSFUL);
+    EXPECT_EQ(err.getErrorCode().value(), static_cast<int>(SettingsError::OPTIONS_SUCCESSFULLY_EXTRACTED));
+
+    Settings st {stManager.releaseSettings()};
+
+    EXPECT_TRUE(SettingsTestContext::CompareSettings(settingsData, st)); 
+
+    Settings stDefault {stManager.releaseSettings()};
+
+    EXPECT_TRUE(SettingsTestContext::CompareSettings(SettingsStuff::SettingsData {}, stDefault)); 
+}
+
+TEST(SettingsManager, BuildCustomtSettingsFromOptionsWithHelpOfSettingsManager) 
+{
+    SettingsManager stManager {};
+
+    SettingsStuff::SettingsData settingsData {};
+    settingsData.verbose = true;
+    settingsData.recursive = true;
+    settingsData.pathToSaveLog = "../../../cache/";
+    settingsData.saveLogBarier = 50;
+
+    ConfigData cfgd {};
+    cfgd.addConfigLine("verbose", "1");
+    cfgd.addConfigLine("RECURSIVE", "false");
+    cfgd.addConfigLine("PathToSaveLog", "../../../cache/");
+    cfgd.addConfigLine("SaveLogBarier", "50");
+
+    std::vector<Options> opts {Options::RECURSIVE, Options::VERBOSE};
+
+    ErrorCode err {stManager.setFromConfig(cfgd)};
+
+    EXPECT_EQ(err.getStatus(), ErrorStatus::SUCCESSFUL);
+    EXPECT_EQ(err.getErrorCode().value(), static_cast<int>(SettingsError::CONFIG_SUCCESSFULLY_EXTRACTED));
+
+    err = stManager.setFromOptions(opts);
+
+    EXPECT_EQ(err.getStatus(), ErrorStatus::SUCCESSFUL);
+    EXPECT_EQ(err.getErrorCode().value(), static_cast<int>(SettingsError::OPTIONS_SUCCESSFULLY_EXTRACTED));
+
+    Settings st {stManager.releaseSettings()};
+
+    EXPECT_TRUE(SettingsTestContext::CompareSettings(settingsData, st)); 
+
+    Settings stDefault {stManager.releaseSettings()};
+
+    EXPECT_TRUE(SettingsTestContext::CompareSettings(SettingsStuff::SettingsData {}, stDefault)); 
+}
+
+TEST(SettingsManager, BuildInvalidSettingsHelpOfSettingsManager) 
+{
+    SettingsManager stManager {};
+
+    ConfigData cfgd1 {};
+    cfgd1.addConfigLine("verb", "1");
+
+    ErrorCode err {stManager.setFromConfig(cfgd1)};
+
+    EXPECT_EQ(err.getStatus(), ErrorStatus::ERROR);
+    EXPECT_EQ(err.getErrorCode().value(), static_cast<int>(SettingsError::UNKNOWN_CONFIGURATION_PARAMETER));
+
+    ConfigData cfgd2 {};
+    cfgd2.addConfigLine("verbose", "100");
+
+    err = stManager.setFromConfig(cfgd2);
+
+    EXPECT_EQ(err.getStatus(), ErrorStatus::ERROR);
+    EXPECT_EQ(err.getErrorCode().value(), static_cast<int>(SettingsError::INVALID_CONFIGURATION_VALUE));
 }

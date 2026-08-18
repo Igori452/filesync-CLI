@@ -11,78 +11,51 @@
 
 #include <concepts>
 
-#include <memory>
-
-class SettingsManager;
-
-/* DATA (SETTINGS) STORAGE */
-class Settings 
+namespace SettingsStuff 
 {
-    private:
-        friend class SettingsManager;
 
-        bool verbose_   {false};
-        bool recursive_ {false};
+struct SettingsData {
+    bool verbose        {false};
+    bool recursive      {false};
 
-        std::string pathToSaveLog_ {"../../../log/"};
-        size_t saveLogBarier_ {20};
+    std::string pathToSaveLog {"../../../log/"};
 
-        Settings() = default;
-
-    public:
-        Settings(const Settings&) = delete;
-        Settings& operator=(Settings&) = delete;
-
-        bool verbose() const;
-        bool recursive() const;
-        const std::string& pathToSaveLog() const;
-        size_t saveLogBarier() const;
+    size_t saveLogBarier {20};
 };
 
-/* BUILDER SETTINGS STORAGE */
-class SettingsManager
+inline bool comapareStrings(std::string_view sw1, std::string_view sw2) 
 {
-    private:
-        std::unique_ptr<Settings> st;
+    if (sw1.size() != sw2.size())
+    {
+        return false;
+    }
 
-    public:
-        SettingsManager();
-
-        std::error_code setFromConfig(const ConfigData& cfgd);
-        std::error_code setFromOptions(const std::vector<Options>& optd);
-
-        std::unique_ptr<Settings> releaseSettings();
-};
-
-namespace SettingsManagerStuff 
-{
+    return std::equal(std::begin(sw1), std::end(sw1), std::begin(sw2), [](char sym1, char sym2){
+        return std::tolower(static_cast<unsigned char>(sym1)) == std::tolower(static_cast<unsigned char>(sym2));
+    });
+}
 
 template <typename T>
-std::optional<T> parseConfigValue(std::string v) 
+std::optional<T> parseConfigValue(std::string_view v) 
 {
     if constexpr (std::same_as<T, std::string>) 
     {
-        return v;
+        return std::string(v);
     }
     else if constexpr (std::same_as<T, bool>) 
     {
-        std::transform(std::begin(v), std::end(v), std::begin(v), [](unsigned char sym){
-            return tolower(sym);
-        });
-
-        if (v == "true" || v == "1") return true;
-        else if  (v == "false" || v == "0") return false;
+        if (comapareStrings(v, "true") || comapareStrings(v, "1")) return true;
+        else if (comapareStrings(v, "false") || comapareStrings(v, "0")) return false;
     }
     else if constexpr (std::integral<T>) 
     {
-        std::string_view sw {v};
-        if (!sw.empty() && sw[0] == '+') 
+        if (!v.empty() && v[0] == '+') 
         {
-            sw.remove_prefix(1);
+            v.remove_prefix(1);
         }
 
         T convert {0};
-        auto [ptr, ec] = std::from_chars(sw.data(), sw.data() + sw.size(), convert);
+        auto [ptr, ec] = std::from_chars(v.data(), v.data() + v.size(), convert);
         if (ec == std::errc{})
         {
             return convert;
@@ -92,4 +65,39 @@ std::optional<T> parseConfigValue(std::string v)
     return std::nullopt;
 }
 
-} /* namespace SettingsManagerStuff */
+} /* namespace SettingsStuff */
+
+class Settings 
+{
+    private:
+        SettingsStuff::SettingsData settingsData;
+
+    public:
+        Settings() = delete;
+        explicit Settings(SettingsStuff::SettingsData stData);
+
+        Settings(const Settings&) = delete;
+        Settings& operator=(const Settings&) = delete;
+
+        Settings(Settings&&) = default;
+        Settings& operator=(Settings&&) = default;
+
+        bool verbose() const;
+        bool recursive() const;
+        const std::string& pathToSaveLog() const;
+        size_t saveLogBarier() const;
+};
+
+class SettingsManager
+{
+    private:
+        SettingsStuff::SettingsData settingsData;
+
+    public:
+        SettingsManager() = default;
+
+        std::error_code setFromConfig(const ConfigData& cfgd);
+        std::error_code setFromOptions(const std::vector<Options>& optd);
+
+        Settings releaseSettings();
+};

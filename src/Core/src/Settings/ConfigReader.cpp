@@ -8,14 +8,9 @@ void ConfigData::addConfigLine(std::string key, std::string value)
     configLines.emplace_back(std::move(key), std::move(value));
 }
 
-std::vector<ConfigData::ConfigLineData> ConfigData::getConfigLines() const &
+const std::vector<ConfigData::ConfigLineData>& ConfigData::getConfigLines() const
 {
     return configLines;
-}
-
-std::vector<ConfigData::ConfigLineData> ConfigData::getConfigLines() && 
-{
-    return std::move(configLines);
 }
 
 ConfigManager::ConfigManager(std::unique_ptr<ParsingStrategy> ps) 
@@ -87,21 +82,21 @@ std::optional<ConfigData> ParsingConfigFromTxt::parse(const IDataSource& ids) co
     std::string key {}, val {};
 
     const std::string rmSyms {" \t\n"};
-    auto filterStr = [&rmSyms](const std::string& str) -> std::string { 
-        size_t indStart = str.find_first_not_of(rmSyms);
+    auto filterStr = [&rmSyms](std::string_view strw) -> std::string_view { 
+        const size_t indStart = strw.find_first_not_of(rmSyms);
 
         if (indStart == std::string::npos)
         {
             return "";
         }
         
-        size_t indEnd = str.find_last_not_of(rmSyms);
-        return str.substr(indStart, (indEnd - indStart + 1));
+        const size_t indEnd = strw.find_last_not_of(rmSyms);
+        return strw.substr(indStart, (indEnd - indStart + 1));
     };
 
     while (std::getline(is, key, ':') && std::getline (is, val))
     {
-        cfgd.addConfigLine(filterStr(key), filterStr(val));
+        cfgd.addConfigLine(std::string {filterStr(key)}, std::string {filterStr(val)});
     }
 
     return cfgd;
